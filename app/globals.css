@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  /* 전체 화면 배경 통일 (첫/로딩/결과 동일) */
+  --saju-bg: #ffffff;
+  --saju-surface: #ffffff;
+  --saju-input: #f5f5f7;
+  --saju-border: #e5e5ea;
+  --saju-text: #111111;
+  --saju-muted: #6b7280;
+
+  --saju-purple: #6b4c9a;
+  --saju-purple-light: #8b6bb8;
+  --saju-gold: #c9a227;
+  --saju-gold-dark: #a8861f;
+  /* 서브타이틀 컬러 */
+  --saju-subtitle: #8F35AD;
+}
+
+@theme inline {
+  --color-saju-bg: var(--saju-bg);
+  --color-saju-surface: var(--saju-surface);
+  --color-saju-input: var(--saju-input);
+  --color-saju-border: var(--saju-border);
+  --color-saju-text: var(--saju-text);
+  --color-saju-muted: var(--saju-muted);
+  --color-saju-purple: var(--saju-purple);
+  --color-saju-purple-light: var(--saju-purple-light);
+  --color-saju-gold: var(--saju-gold);
+  --color-saju-gold-dark: var(--saju-gold-dark);
+  --color-saju-subtitle: var(--saju-subtitle);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--saju-bg);
+  color: var(--saju-text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
