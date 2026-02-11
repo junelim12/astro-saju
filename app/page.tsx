@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getCoordinates, getTimezoneOffset } from "@/lib/geocoder";
+import { calculateChart } from "@/lib/calculateChart";
 
 // 1. 국가 및 주요 도시 데이터 정의 (객관식 선택용)
 const LOCATION_DATA: Record<string, string[]> = {
@@ -20,6 +22,9 @@ type AnalyzeResult = {
   love: string;
   investment: string;
   destiny: string;
+  sunSign?: string;
+  moonSign?: string;
+  risingSign?: string;
 };
 
 export default function SajuLandingPage() {
@@ -93,6 +98,28 @@ export default function SajuLandingPage() {
       }
 
       const data: AnalyzeResult = await res.json();
+
+      // 태어난 장소(위·경도) 반영한 별자리 정밀 계산 (클라이언트 WASM)
+      try {
+        const geo = getCoordinates(birthCity);
+        const timezoneOffset = getTimezoneOffset(birthCity);
+        const chart = await calculateChart({
+          year: parseInt(birthYear, 10),
+          month: parseInt(birthMonth, 10),
+          day: parseInt(birthDay, 10),
+          hour: hour24,
+          minute,
+          timezoneOffset,
+          latitude: geo.lat,
+          longitude: geo.lng,
+        });
+        data.sunSign = chart.sunSign;
+        data.moonSign = chart.moonSign;
+        data.risingSign = chart.risingSign;
+      } catch (_) {
+        // WASM 실패 시 API에서 준 sun/moon/rising 유지
+      }
+
       localStorage.setItem("sajuResult", JSON.stringify(data));
       router.push("/result");
     } catch (err: any) {
