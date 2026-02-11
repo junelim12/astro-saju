@@ -1,5 +1,6 @@
 import { Solar } from "lunar-javascript";
 import { SHINSAL_DEFINITIONS } from "./shinsal";
+import { ZODIAC_SIGNS_BY_INDEX } from "./zodiacDescriptions";
 
 // 1. 데이터 타입 정의
 export type DayPillarCore = {
@@ -326,6 +327,56 @@ function getWesternZodiac(month: number, day: number): string {
     }
   }
   return "";
+}
+
+/** Julian Day (UT noon) — Gregorian */
+function julianDay(year: number, month: number, day: number): number {
+  let y = year;
+  let m = month;
+  if (m <= 2) {
+    y -= 1;
+    m += 12;
+  }
+  const A = Math.floor(y / 100);
+  const B = 2 - A + Math.floor(A / 4);
+  return (
+    Math.floor(365.25 * (y + 4716)) +
+    Math.floor(30.6001 * (m + 1)) +
+    day +
+    B -
+    1524.5
+  );
+}
+
+/**
+ * 달별자리( Moon Sign ) 근사 — 생일·생시 기준
+ * 달의 평균 황경을 이용한 단순 근사 (tropical)
+ */
+export function getMoonSign(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number
+): string {
+  const jd = julianDay(year, month, day);
+  const dayFraction = hour / 24 + minute / 1440;
+  // 달의 평균 이동 ~13.1764°/일, 0.549°/시간
+  const daysSinceEpoch = jd - 2451550.1 + dayFraction;
+  const longitude = (daysSinceEpoch / 27.321582) * 360;
+  const normalized = ((longitude % 360) + 360) % 360;
+  const index = Math.floor(normalized / 30) % 12;
+  return ZODIAC_SIGNS_BY_INDEX[index];
+}
+
+/**
+ * 상승궁( Rising Sign ) 근사 — 생시 기준 (지역 무관 단순 근사)
+ * 약 2시간에 한 번꼴로 상승궁이 바는다고 가정
+ */
+export function getRisingSign(hour: number, minute: number): string {
+  const totalHours = hour + minute / 60;
+  const index = Math.floor(totalHours / 2) % 12;
+  return ZODIAC_SIGNS_BY_INDEX[index];
 }
 
 // 헬퍼: 오행 가져오기 (신(申) 처리 포함)

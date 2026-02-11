@@ -2,6 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  SUN_SIGN_DESCRIPTIONS,
+  MOON_SIGN_DESCRIPTIONS,
+  RISING_SIGN_DESCRIPTIONS,
+} from "@/lib/zodiacDescriptions";
 
 type AnalyzeResponse = {
   one_line: string;
@@ -16,11 +21,11 @@ type AnalyzeResponse = {
   investmentStyle?: string;
   /** 재물과 투자 — 주의해야 할 점 (상세 카드용) */
   investmentCaution?: string;
-  /** LLM 생성: 태양별자리(Sun Sign) 해석 — 별자리가 말하는 00님 카드용 */
+  /** 별자리 카드: 태양별자리 한글명 (예: 처녀자리) */
   sunSign?: string;
-  /** LLM 생성: 달별자리(Moon Sign) 해석 — 별자리가 말하는 00님 카드용 */
+  /** 별자리 카드: 달별자리 한글명 */
   moonSign?: string;
-  /** LLM 생성: 상승궁(Rising) 해석 — 별자리가 말하는 00님 카드용 */
+  /** 별자리 카드: 상승궁 한글명 */
   risingSign?: string;
 };
 
@@ -70,39 +75,51 @@ function SkeletonCard({
   );
 }
 
-/** 별자리가 말하는 00님 — Sun / Moon / 상승궁 카드 (각각 LLM 결과 + 이모지) */
-const ZODIAC_CARD_CONFIG = [
+/** 별자리가 말하는 00님 — Sun / Moon / 상승궁 카드 (별자리명 → 하드코딩 설명) */
+const ZODIAC_CARD_CONFIG: readonly {
+  key: "sunSign" | "moonSign" | "risingSign";
+  label: string;
+  emoji: string;
+  description: string;
+  descriptionsMap: Record<string, string>;
+}[] = [
   {
-    key: "sunSign" as const,
+    key: "sunSign",
     label: "Sun Sign (태양별자리)",
     emoji: "☀️",
     description: "외부에 드러나는 에너지, 본질적인 성향",
+    descriptionsMap: SUN_SIGN_DESCRIPTIONS,
   },
   {
-    key: "moonSign" as const,
+    key: "moonSign",
     label: "Moon Sign (달별자리)",
     emoji: "🌙",
     description: "내면의 감정과 욕구, 숨겨진 나",
+    descriptionsMap: MOON_SIGN_DESCRIPTIONS,
   },
   {
-    key: "risingSign" as const,
+    key: "risingSign",
     label: "상승궁 (Rising)",
     emoji: "⬆️",
     description: "첫인상과 사회적 가면, 세상에 보이는 모습",
+    descriptionsMap: RISING_SIGN_DESCRIPTIONS,
   },
-] as const;
+];
 
 function ZodiacCard({
   label,
   emoji,
   description,
-  content,
+  signName,
+  descriptionText,
 }: {
   label: string;
   emoji: string;
   description: string;
-  content: string | undefined;
+  signName: string | undefined;
+  descriptionText: string | undefined;
 }) {
+  const hasContent = signName && descriptionText;
   return (
     <div className="bg-white rounded-2xl px-5 py-4 border border-saju-border">
       <div className="flex items-center gap-2 mb-2">
@@ -115,15 +132,16 @@ function ZodiacCard({
         </div>
       </div>
       <div className="text-sm text-black leading-relaxed mt-3 min-h-[48px]">
-        {content ? (
-          splitParagraphs(content).map((p, i) => (
-            <p key={i} className="mb-3 last:mb-0">
-              {p}
+        {hasContent ? (
+          <>
+            <p className="mb-3">
+              <strong>별자리: {signName}</strong>
             </p>
-          ))
+            <p className="mb-0">{descriptionText}</p>
+          </>
         ) : (
           <span className="italic text-saju-muted">
-            (LLM 생성 결과로 채워질 영역)
+            (분석 결과에서 별자리 정보를 불러올 수 없습니다)
           </span>
         )}
       </div>
@@ -205,15 +223,22 @@ export default function ResultPage() {
             <SectionTitle>별자리가 말하는 {userName}님</SectionTitle>
             <SubTitle>태양·달·상승궁으로 읽는 당신</SubTitle>
             <div className="space-y-4">
-              {ZODIAC_CARD_CONFIG.map((item) => (
-                <ZodiacCard
-                  key={item.key}
-                  label={item.label}
-                  emoji={item.emoji}
-                  description={item.description}
-                  content={result[item.key]}
-                />
-              ))}
+              {ZODIAC_CARD_CONFIG.map((item) => {
+                const signName = result[item.key];
+                const descriptionText = signName
+                  ? item.descriptionsMap[signName]
+                  : undefined;
+                return (
+                  <ZodiacCard
+                    key={item.key}
+                    label={item.label}
+                    emoji={item.emoji}
+                    description={item.description}
+                    signName={signName}
+                    descriptionText={descriptionText}
+                  />
+                );
+              })}
             </div>
           </section>
 

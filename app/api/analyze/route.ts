@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { getSaju } from "@/lib/sajuConverter";
+import { getSaju, getMoonSign, getRisingSign } from "@/lib/sajuConverter";
 import { getCoordinates } from "@/lib/geocoder";
 
 export const maxDuration = 60;
@@ -12,6 +12,12 @@ export type AnalyzeResponse = {
   love: string;
   investment: string;
   destiny: string;
+  /** 별자리 카드용: 태양별자리 한글명 (예: 처녀자리) */
+  sunSign?: string;
+  /** 별자리 카드용: 달별자리 한글명 */
+  moonSign?: string;
+  /** 별자리 카드용: 상승궁 한글명 */
+  risingSign?: string;
 };
 
 function pad2(n: number) {
@@ -187,6 +193,9 @@ F. destiny
       love: normalizeToString(step2.love),
       investment: normalizeToString(step3.investment),
       destiny: normalizeToString(step3.destiny),
+      sunSign: zodiac,
+      moonSign: getMoonSign(year, month, day, hour, minute),
+      risingSign: getRisingSign(hour, minute),
     };
 
     return NextResponse.json(result);
