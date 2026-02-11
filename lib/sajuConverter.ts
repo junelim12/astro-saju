@@ -14,6 +14,14 @@ export type DayPillarCore = {
   coreKeywords: string[]; // 오행 기반 키워드
 };
 
+/** 연·월·시 지지와 일지(日支) 간의 합·충·형·파 관계 */
+export type PillarRelation = "합" | "충" | "형" | "파" | null;
+export type PillarRelations = {
+  year: { relation: PillarRelation; label: string };  // 연지-일지
+  month: { relation: PillarRelation; label: string };  // 월지-일지
+  hour: { relation: PillarRelation; label: string };   // 시지-일지
+};
+
 // 2. 기초 데이터 매핑 (한자 -> 한글)
 const HANJA_TO_KOR: Record<string, string> = {
   甲: "갑",
@@ -258,6 +266,40 @@ const SHINSAL_12_GROUPS: Record<string, string[]> = {
 };
 
 const ZODIAC_ORDER = ["해", "자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술"];
+
+// 5-2. 지지(地支) 합·충·형·파 — 일지와 연·월·시지 관계
+const JIJI_HAP: [string, string][] = [["자", "축"], ["인", "해"], ["묘", "술"], ["진", "유"], ["사", "신"], ["오", "미"]]; // 육합
+const JIJI_CHUNG: [string, string][] = [["자", "오"], ["축", "미"], ["인", "신"], ["묘", "유"], ["진", "술"], ["사", "해"]]; // 육충
+const JIJI_HYUNG: [string, string][] = [["인", "사"], ["사", "신"], ["신", "인"], ["축", "술"], ["술", "미"], ["미", "축"], ["자", "묘"], ["묘", "자"]]; // 삼형+자묘형
+const JIJI_SELF_HYUNG = ["진", "오", "유", "해"]; // 자형(같은 지지 두 개 있을 때)
+const JIJI_HAE: [string, string][] = [["자", "미"], ["축", "오"], ["인", "사"], ["묘", "진"], ["신", "해"], ["유", "술"]]; // 육해(害, 파에 해당)
+
+function normalizePair(a: string, b: string): string {
+  return [a, b].sort().join("");
+}
+function hasPair(pairs: [string, string][], branch1: string, branch2: string): boolean {
+  const n = normalizePair(branch1, branch2);
+  return pairs.some(([x, y]) => normalizePair(x, y) === n);
+}
+
+/** 일지(dayBranch)와 다른 한 지지(otherBranch)의 관계 반환 */
+function getJijiRelation(dayBranch: string, otherBranch: string): PillarRelation {
+  if (dayBranch === otherBranch) {
+    return JIJI_SELF_HYUNG.includes(dayBranch) ? "형" : null; // 자형
+  }
+  if (hasPair(JIJI_HAP, dayBranch, otherBranch)) return "합";
+  if (hasPair(JIJI_CHUNG, dayBranch, otherBranch)) return "충";
+  if (hasPair(JIJI_HYUNG, dayBranch, otherBranch)) return "형";
+  if (hasPair(JIJI_HAE, dayBranch, otherBranch)) return "파";
+  return null;
+}
+
+function pillarRelationLabel(pillar: "year" | "month" | "hour", relation: PillarRelation, otherBranch: string): string {
+  const names = { year: "연지", month: "월지", hour: "시지" };
+  const pillarName = names[pillar];
+  if (!relation) return `${pillarName}-일지: 없음`;
+  return `${pillarName}(${otherBranch})-일지: ${relation}`;
+}
 
 // 6. 특수 신살 규칙 (일주 기준)
 const SPECIAL_SHINSAL_RULES = {
@@ -514,21 +556,39 @@ export function getSaju(
     .map((key) => SHINSAL_DEFINITIONS[key])
     .filter((def) => Boolean(def));
 
-  // 6. 서양 별자리
+  // 6. 연·월·시 지지와 일지 간 합·충·형·파
+  const dayBranch = branchKor;
+  const pillarRelations: PillarRelations = {
+    year: {
+      relation: getJijiRelation(dayBranch, yearBranchKor),
+      label: pillarRelationLabel("year", getJijiRelation(dayBranch, yearBranchKor), yearBranchKor),
+    },
+    month: {
+      relation: getJijiRelation(dayBranch, monthBranchKor),
+      label: pillarRelationLabel("month", getJijiRelation(dayBranch, monthBranchKor), monthBranchKor),
+    },
+    hour: {
+      relation: getJijiRelation(dayBranch, hourBranchKor),
+      label: pillarRelationLabel("hour", getJijiRelation(dayBranch, hourBranchKor), hourBranchKor),
+    },
+  };
+
+  // 7. 서양 별자리
   const zodiac = getWesternZodiac(month, day);
 
-  // 7. 결과 반환 (API에서 사용하기 쉽도록 필요한 정보들 정리)
+  // 8. 결과 반환 (API에서 사용하기 쉽도록 필요한 정보들 정리)
   return {
     dayPillarCore,
-    activeShinsal, // 상세 설명이 포함된 객체 배열
-    shinsalNames: activeShinsal.map((s) => s.name).join(", "), // 프롬프트용 문자열
-    activeShinsalKeys, // 키 배열
+    activeShinsal,
+    shinsalNames: activeShinsal.map((s) => s.name).join(", "),
+    activeShinsalKeys,
     pillars: {
       year: convertPillar(rawYear),
       month: convertPillar(rawMonth),
       day: dayPillarKor,
       hour: convertPillar(rawHour),
     },
+    pillarRelations, // 연월시지-일지 합·충·형·파
     dayMaster: stemKor,
     zodiac,
   };
