@@ -1,5 +1,6 @@
 import { Solar } from "lunar-javascript";
 import { SHINSAL_DEFINITIONS } from "./shinsal";
+import { ZODIAC_SIGNS_BY_INDEX } from "./zodiacDescriptions";
 
 // 1. 데이터 타입 정의
 export type DayPillarCore = {
@@ -11,6 +12,14 @@ export type DayPillarCore = {
   hiddenStems: string[]; // 예: ["임", "계"]
   structuralRelation: string; // 예: "인성 위에 일간" (십성 관계)
   coreKeywords: string[]; // 오행 기반 키워드
+};
+
+/** 연·월·시 지지와 일지(日支) 간의 합·충·형·파 관계 */
+export type PillarRelation = "합" | "충" | "형" | "파" | null;
+export type PillarRelations = {
+  year: { relation: PillarRelation; label: string };  // 연지-일지
+  month: { relation: PillarRelation; label: string };  // 월지-일지
+  hour: { relation: PillarRelation; label: string };   // 시지-일지
 };
 
 // 2. 기초 데이터 매핑 (한자 -> 한글)
@@ -258,6 +267,40 @@ const SHINSAL_12_GROUPS: Record<string, string[]> = {
 
 const ZODIAC_ORDER = ["해", "자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술"];
 
+// 5-2. 지지(地支) 합·충·형·파 — 일지와 연·월·시지 관계
+const JIJI_HAP: [string, string][] = [["자", "축"], ["인", "해"], ["묘", "술"], ["진", "유"], ["사", "신"], ["오", "미"]]; // 육합
+const JIJI_CHUNG: [string, string][] = [["자", "오"], ["축", "미"], ["인", "신"], ["묘", "유"], ["진", "술"], ["사", "해"]]; // 육충
+const JIJI_HYUNG: [string, string][] = [["인", "사"], ["사", "신"], ["신", "인"], ["축", "술"], ["술", "미"], ["미", "축"], ["자", "묘"], ["묘", "자"]]; // 삼형+자묘형
+const JIJI_SELF_HYUNG = ["진", "오", "유", "해"]; // 자형(같은 지지 두 개 있을 때)
+const JIJI_HAE: [string, string][] = [["자", "미"], ["축", "오"], ["인", "사"], ["묘", "진"], ["신", "해"], ["유", "술"]]; // 육해(害, 파에 해당)
+
+function normalizePair(a: string, b: string): string {
+  return [a, b].sort().join("");
+}
+function hasPair(pairs: [string, string][], branch1: string, branch2: string): boolean {
+  const n = normalizePair(branch1, branch2);
+  return pairs.some(([x, y]) => normalizePair(x, y) === n);
+}
+
+/** 일지(dayBranch)와 다른 한 지지(otherBranch)의 관계 반환 */
+function getJijiRelation(dayBranch: string, otherBranch: string): PillarRelation {
+  if (dayBranch === otherBranch) {
+    return JIJI_SELF_HYUNG.includes(dayBranch) ? "형" : null; // 자형
+  }
+  if (hasPair(JIJI_HAP, dayBranch, otherBranch)) return "합";
+  if (hasPair(JIJI_CHUNG, dayBranch, otherBranch)) return "충";
+  if (hasPair(JIJI_HYUNG, dayBranch, otherBranch)) return "형";
+  if (hasPair(JIJI_HAE, dayBranch, otherBranch)) return "파";
+  return null;
+}
+
+function pillarRelationLabel(pillar: "year" | "month" | "hour", relation: PillarRelation, otherBranch: string): string {
+  const names = { year: "연지", month: "월지", hour: "시지" };
+  const pillarName = names[pillar];
+  if (!relation) return `${pillarName}-일지: 없음`;
+  return `${pillarName}(${otherBranch})-일지: ${relation}`;
+}
+
 // 6. 특수 신살 규칙 (일주 기준)
 const SPECIAL_SHINSAL_RULES = {
   baekho: ["갑진", "을미", "병술", "정축", "무진", "임술", "계축"],
@@ -326,6 +369,56 @@ function getWesternZodiac(month: number, day: number): string {
     }
   }
   return "";
+}
+
+/** Julian Day (UT noon) — Gregorian */
+function julianDay(year: number, month: number, day: number): number {
+  let y = year;
+  let m = month;
+  if (m <= 2) {
+    y -= 1;
+    m += 12;
+  }
+  const A = Math.floor(y / 100);
+  const B = 2 - A + Math.floor(A / 4);
+  return (
+    Math.floor(365.25 * (y + 4716)) +
+    Math.floor(30.6001 * (m + 1)) +
+    day +
+    B -
+    1524.5
+  );
+}
+
+/**
+ * 달별자리( Moon Sign ) 근사 — 생일·생시 기준
+ * 달의 평균 황경을 이용한 단순 근사 (tropical)
+ */
+export function getMoonSign(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number
+): string {
+  const jd = julianDay(year, month, day);
+  const dayFraction = hour / 24 + minute / 1440;
+  // 달의 평균 이동 ~13.1764°/일, 0.549°/시간
+  const daysSinceEpoch = jd - 2451550.1 + dayFraction;
+  const longitude = (daysSinceEpoch / 27.321582) * 360;
+  const normalized = ((longitude % 360) + 360) % 360;
+  const index = Math.floor(normalized / 30) % 12;
+  return ZODIAC_SIGNS_BY_INDEX[index];
+}
+
+/**
+ * 상승궁( Rising Sign ) 근사 — 생시 기준 (지역 무관 단순 근사)
+ * 약 2시간에 한 번꼴로 상승궁이 바는다고 가정
+ */
+export function getRisingSign(hour: number, minute: number): string {
+  const totalHours = hour + minute / 60;
+  const index = Math.floor(totalHours / 2) % 12;
+  return ZODIAC_SIGNS_BY_INDEX[index];
 }
 
 // 헬퍼: 오행 가져오기 (신(申) 처리 포함)
@@ -463,21 +556,39 @@ export function getSaju(
     .map((key) => SHINSAL_DEFINITIONS[key])
     .filter((def) => Boolean(def));
 
-  // 6. 서양 별자리
+  // 6. 연·월·시 지지와 일지 간 합·충·형·파
+  const dayBranch = branchKor;
+  const pillarRelations: PillarRelations = {
+    year: {
+      relation: getJijiRelation(dayBranch, yearBranchKor),
+      label: pillarRelationLabel("year", getJijiRelation(dayBranch, yearBranchKor), yearBranchKor),
+    },
+    month: {
+      relation: getJijiRelation(dayBranch, monthBranchKor),
+      label: pillarRelationLabel("month", getJijiRelation(dayBranch, monthBranchKor), monthBranchKor),
+    },
+    hour: {
+      relation: getJijiRelation(dayBranch, hourBranchKor),
+      label: pillarRelationLabel("hour", getJijiRelation(dayBranch, hourBranchKor), hourBranchKor),
+    },
+  };
+
+  // 7. 서양 별자리
   const zodiac = getWesternZodiac(month, day);
 
-  // 7. 결과 반환 (API에서 사용하기 쉽도록 필요한 정보들 정리)
+  // 8. 결과 반환 (API에서 사용하기 쉽도록 필요한 정보들 정리)
   return {
     dayPillarCore,
-    activeShinsal, // 상세 설명이 포함된 객체 배열
-    shinsalNames: activeShinsal.map((s) => s.name).join(", "), // 프롬프트용 문자열
-    activeShinsalKeys, // 키 배열
+    activeShinsal,
+    shinsalNames: activeShinsal.map((s) => s.name).join(", "),
+    activeShinsalKeys,
     pillars: {
       year: convertPillar(rawYear),
       month: convertPillar(rawMonth),
       day: dayPillarKor,
       hour: convertPillar(rawHour),
     },
+    pillarRelations, // 연월시지-일지 합·충·형·파
     dayMaster: stemKor,
     zodiac,
   };

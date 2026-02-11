@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { getCoordinates, getTimezoneOffset } from "@/lib/geocoder";
+import { calculateChart } from "@/lib/calculateChart";
 
 // 1. 국가 및 주요 도시 데이터 정의 (객관식 선택용)
 const LOCATION_DATA: Record<string, string[]> = {
@@ -20,6 +22,9 @@ type AnalyzeResult = {
   love: string;
   investment: string;
   destiny: string;
+  sunSign?: string;
+  moonSign?: string;
+  risingSign?: string;
 };
 
 export default function SajuLandingPage() {
@@ -32,7 +37,7 @@ export default function SajuLandingPage() {
   const [birthDay, setBirthDay] = useState("01");
   const [birthHour, setBirthHour] = useState("12");
   const [birthMinute, setBirthMinute] = useState("00");
-  const [birthAmPm, setBirthAmPm] = useState("AM");
+  const [birthAmPm, setBirthAmPm] = useState("PM"); // 기본값 정오(12시) — 오전이면 0(자정)으로 전달됨
   
   const [gender, setGender] = useState<"male" | "female" | "">(""); // (선택사항이라면 초기값 유지, 필수는 "male" 등으로 설정 추천)
   const [calendarType, setCalendarType] = useState<"solar" | "lunar" | "">("solar"); // 기본값 양력 추천
@@ -43,9 +48,43 @@ export default function SajuLandingPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const restoredCountryRef = useRef<string | null>(null);
 
-  // 국가 변경 시 해당 국가의 첫 번째 도시로 자동 설정
+  // 첫 화면: localStorage에서 출생지·시간 등 복원
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem("sajuForm");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, string>;
+      if (parsed.birthCountry) restoredCountryRef.current = parsed.birthCountry;
+      if (parsed.birthYear) setBirthYear(parsed.birthYear);
+      if (parsed.birthMonth) setBirthMonth(parsed.birthMonth);
+      if (parsed.birthDay) setBirthDay(parsed.birthDay);
+      if (parsed.birthHour) setBirthHour(parsed.birthHour);
+      if (parsed.birthMinute) setBirthMinute(parsed.birthMinute);
+      if (parsed.birthAmPm) setBirthAmPm(parsed.birthAmPm);
+      if (parsed.birthCountry && LOCATION_DATA[parsed.birthCountry]) {
+        setBirthCountry(parsed.birthCountry);
+        if (parsed.birthCity && LOCATION_DATA[parsed.birthCountry].includes(parsed.birthCity)) {
+          setBirthCity(parsed.birthCity);
+        } else {
+          setBirthCity(LOCATION_DATA[parsed.birthCountry][0]);
+        }
+      }
+      if (parsed.name != null) setName(parsed.name);
+      if (parsed.calendarType === "solar" || parsed.calendarType === "lunar") setCalendarType(parsed.calendarType);
+      if (parsed.gender === "male" || parsed.gender === "female") setGender(parsed.gender);
+    } catch (_) {
+      // 무시
+    }
+  }, []);
+
+  // 국가 변경 시 해당 국가의 첫 번째 도시로 자동 설정 (복원 직후 한 번만 스킵)
+  useEffect(() => {
+    if (restoredCountryRef.current !== null && restoredCountryRef.current === birthCountry) {
+      restoredCountryRef.current = null;
+      return;
+    }
     if (LOCATION_DATA[birthCountry]) {
       setBirthCity(LOCATION_DATA[birthCountry][0]);
     }
@@ -56,6 +95,24 @@ export default function SajuLandingPage() {
     setLoading(true);
     setError(null);
     localStorage.setItem("userName", name);
+    try {
+      localStorage.setItem(
+        "sajuForm",
+        JSON.stringify({
+          name,
+          birthYear,
+          birthMonth,
+          birthDay,
+          birthHour,
+          birthMinute,
+          birthAmPm,
+          birthCountry,
+          birthCity,
+          calendarType,
+          gender,
+        })
+      );
+    } catch (_) {}
 
     // 시간 변환 로직
     const hour12 = parseInt(birthHour || "0", 10);
@@ -93,6 +150,28 @@ export default function SajuLandingPage() {
       }
 
       const data: AnalyzeResult = await res.json();
+
+      // 태어난 장소(위·경도) 반영한 별자리 정밀 계산 (클라이언트 WASM)
+      try {
+        const geo = getCoordinates(birthCity);
+        const timezoneOffset = getTimezoneOffset(birthCity);
+        const chart = await calculateChart({
+          year: parseInt(birthYear, 10),
+          month: parseInt(birthMonth, 10),
+          day: parseInt(birthDay, 10),
+          hour: hour24,
+          minute,
+          timezoneOffset,
+          latitude: geo.lat,
+          longitude: geo.lng,
+        });
+        data.sunSign = chart.sunSign;
+        data.moonSign = chart.moonSign;
+        data.risingSign = chart.risingSign;
+      } catch (_) {
+        // WASM 실패 시 API에서 준 sun/moon/rising 유지
+      }
+
       localStorage.setItem("sajuResult", JSON.stringify(data));
       router.push("/result");
     } catch (err: any) {

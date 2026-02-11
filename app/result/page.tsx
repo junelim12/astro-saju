@@ -2,6 +2,25 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  SUN_SIGN_DESCRIPTIONS,
+  MOON_SIGN_DESCRIPTIONS,
+  RISING_SIGN_DESCRIPTIONS,
+} from "@/lib/zodiacDescriptions";
+
+/** 일주(일간+오행)별 기질 서브타이틀 문구 */
+const DAY_PILLAR_SUBTITLES: Record<string, string> = {
+  갑목: "큰 나무처럼 곧게 뻗어나가는 추진력",
+  을목: "부드러운 겉모습에 숨겨진 끈질긴 생명력과 적응력",
+  병화: "세상의 중심이 되는 태양",
+  정화: "달빛처럼 은은한 온정과 예리한 분석력",
+  무토: "주변을 포용하고 믿음을 주는 높은 산",
+  기토: "단단한 중심을 갖고 주변을 길러내는 흙",
+  경금: "남들은 모르는 나만의 기준과 정의감",
+  신금: "깔끔하고 섬세하며 완벽을 추구하는 마음",
+  임수: "조용한 바다 아래 휘몰아치는 지혜",
+  계수: "풍부한 감수성과 센스로 어디서든 사랑받는 인기쟁이",
+};
 
 type AnalyzeResponse = {
   one_line: string;
@@ -16,12 +35,20 @@ type AnalyzeResponse = {
   investmentStyle?: string;
   /** 재물과 투자 — 주의해야 할 점 (상세 카드용) */
   investmentCaution?: string;
-  /** LLM 생성: 태양별자리(Sun Sign) 해석 — 별자리가 말하는 00님 카드용 */
+  /** 별자리 카드: 태양별자리 한글명 (예: 처녀자리) */
+  /** 기질 1문단(연월일시주), 2문단(특히 일주) — 있으면 기질 카드에 사용 */
+  personality_1?: string;
+  personality_2?: string;
+  /** 사주+별자리 결합 문단 — 있으면 맨 위 섹션에 사용 */
+  personality_3?: string;
+  /** 일주 서브타이틀용 */
+  dayStem?: string;
+  stemElement?: string;
   sunSign?: string;
-  /** LLM 생성: 달별자리(Moon Sign) 해석 — 별자리가 말하는 00님 카드용 */
   moonSign?: string;
-  /** LLM 생성: 상승궁(Rising) 해석 — 별자리가 말하는 00님 카드용 */
   risingSign?: string;
+  /** 한계·가정·참고사항 (원인 + 해결책) */
+  analysisLogs?: string[];
 };
 
 function splitParagraphs(text: string) {
@@ -70,39 +97,51 @@ function SkeletonCard({
   );
 }
 
-/** 별자리가 말하는 00님 — Sun / Moon / 상승궁 카드 (각각 LLM 결과 + 이모지) */
-const ZODIAC_CARD_CONFIG = [
+/** 별자리가 말하는 00님 — 타이틀=서브타이틀 내용, 서브타이틀=기존 타이틀 */
+const ZODIAC_CARD_CONFIG: readonly {
+  key: "sunSign" | "moonSign" | "risingSign";
+  label: string;
+  emoji: string;
+  description: string;
+  descriptionsMap: Record<string, string>;
+}[] = [
   {
-    key: "sunSign" as const,
-    label: "Sun Sign (태양별자리)",
+    key: "sunSign",
+    label: "외부에 드러나는 에너지, 본질적인 성향",
     emoji: "☀️",
-    description: "외부에 드러나는 에너지, 본질적인 성향",
+    description: "Sun Sign (태양별자리)",
+    descriptionsMap: SUN_SIGN_DESCRIPTIONS,
   },
   {
-    key: "moonSign" as const,
-    label: "Moon Sign (달별자리)",
+    key: "moonSign",
+    label: "내면의 감정과 욕구, 숨겨진 나",
     emoji: "🌙",
-    description: "내면의 감정과 욕구, 숨겨진 나",
+    description: "Moon Sign (달별자리)",
+    descriptionsMap: MOON_SIGN_DESCRIPTIONS,
   },
   {
-    key: "risingSign" as const,
-    label: "상승궁 (Rising)",
+    key: "risingSign",
+    label: "첫인상과 사회적 가면, 세상에 보이는 모습",
     emoji: "⬆️",
-    description: "첫인상과 사회적 가면, 세상에 보이는 모습",
+    description: "상승궁 (Rising)",
+    descriptionsMap: RISING_SIGN_DESCRIPTIONS,
   },
-] as const;
+];
 
 function ZodiacCard({
   label,
   emoji,
   description,
-  content,
+  signName,
+  descriptionText,
 }: {
   label: string;
   emoji: string;
   description: string;
-  content: string | undefined;
+  signName: string | undefined;
+  descriptionText: string | undefined;
 }) {
+  const hasContent = signName && descriptionText;
   return (
     <div className="bg-white rounded-2xl px-5 py-4 border border-saju-border">
       <div className="flex items-center gap-2 mb-2">
@@ -115,15 +154,16 @@ function ZodiacCard({
         </div>
       </div>
       <div className="text-sm text-black leading-relaxed mt-3 min-h-[48px]">
-        {content ? (
-          splitParagraphs(content).map((p, i) => (
-            <p key={i} className="mb-3 last:mb-0">
-              {p}
+        {hasContent ? (
+          <>
+            <p className="mb-3">
+              <strong>{signName}</strong>
             </p>
-          ))
+            <p className="mb-0">{descriptionText}</p>
+          </>
         ) : (
           <span className="italic text-saju-muted">
-            (LLM 생성 결과로 채워질 영역)
+            (분석 결과에서 별자리 정보를 불러올 수 없습니다)
           </span>
         )}
       </div>
@@ -181,39 +221,79 @@ export default function ResultPage() {
         </header>
 
         <div className="space-y-8">
-          {/* 1. 사주가 이야기하는 00님의 기질 */}
+          {/* 1. 사주와 별자리를 결합한 00님의 성격 (맨 위) */}
           <section>
-            <SectionTitle>사주가 이야기하는 {userName}님의 기질</SectionTitle>
-            <SubTitle>흙의 사주가 만드는 단단한 중심</SubTitle>
+            <SectionTitle>사주와 별자리를 결합한 {userName}님의 성격</SectionTitle>
             <div className="bg-white rounded-2xl px-5 py-4 border border-saju-border">
               <BodyText>
-                {splitParagraphs(result.personality).length > 0 ? (
-                  splitParagraphs(result.personality).map((p, i) => (
-                    <p key={i} className="mb-4 last:mb-0">
-                      {p}
-                    </p>
-                  ))
-                ) : (
-                  <p className="text-saju-muted">분석 내용이 없습니다.</p>
-                )}
+                {(() => {
+                  const third =
+                    result.personality_3 ??
+                    splitParagraphs(result.personality)[2];
+                  return third ? (
+                    <p className="mb-0">{third}</p>
+                  ) : (
+                    <p className="text-saju-muted">분석 내용이 없습니다.</p>
+                  );
+                })()}
               </BodyText>
             </div>
           </section>
 
-          {/* 2. 별자리가 말하는 00님 — Sun / Moon / 상승궁 (LLM 결과 + 이모지) */}
+          {/* 2. 사주가 이야기하는 00님의 기질 (2문단: 연월일시주 결합 + 특히 일주) */}
+          <section>
+            <SectionTitle>사주가 이야기하는 {userName}님의 기질</SectionTitle>
+            <SubTitle>
+              {result.dayStem && result.stemElement
+                ? DAY_PILLAR_SUBTITLES[`${result.dayStem}${result.stemElement}`] ??
+                  "흙의 사주가 만드는 단단한 중심"
+                : "흙의 사주가 만드는 단단한 중심"}
+            </SubTitle>
+            <div className="bg-white rounded-2xl px-5 py-4 border border-saju-border">
+              <BodyText>
+                {(() => {
+                  const para1 = result.personality_1;
+                  const para2 = result.personality_2;
+                  const useStructured =
+                    para1 !== undefined || para2 !== undefined;
+                  const firstTwo = useStructured
+                    ? [para1, para2].filter(Boolean)
+                    : splitParagraphs(result.personality).slice(0, 2);
+                  return firstTwo.length > 0 ? (
+                    firstTwo.map((p, i) => (
+                      <p key={i} className="mb-4 last:mb-0">
+                        {p}
+                      </p>
+                    ))
+                  ) : (
+                    <p className="text-saju-muted">분석 내용이 없습니다.</p>
+                  );
+                })()}
+              </BodyText>
+            </div>
+          </section>
+
+          {/* 3. 별자리가 말하는 00님 — Sun / Moon / 상승궁 */}
           <section>
             <SectionTitle>별자리가 말하는 {userName}님</SectionTitle>
             <SubTitle>태양·달·상승궁으로 읽는 당신</SubTitle>
             <div className="space-y-4">
-              {ZODIAC_CARD_CONFIG.map((item) => (
-                <ZodiacCard
-                  key={item.key}
-                  label={item.label}
-                  emoji={item.emoji}
-                  description={item.description}
-                  content={result[item.key]}
-                />
-              ))}
+              {ZODIAC_CARD_CONFIG.map((item) => {
+                const signName = result[item.key];
+                const descriptionText = signName
+                  ? item.descriptionsMap[signName]
+                  : undefined;
+                return (
+                  <ZodiacCard
+                    key={item.key}
+                    label={item.label}
+                    emoji={item.emoji}
+                    description={item.description}
+                    signName={signName}
+                    descriptionText={descriptionText}
+                  />
+                );
+              })}
             </div>
           </section>
 
@@ -244,10 +324,6 @@ export default function ResultPage() {
                 )}
               </BodyText>
             </div>
-            <SkeletonCard title="추천 이직 시기" />
-            <div className="mt-3">
-              <SkeletonCard title="은퇴 시절 예측" />
-            </div>
           </section>
 
           {/* 4. 00님의 로맨스 */}
@@ -267,18 +343,10 @@ export default function ResultPage() {
                 )}
               </BodyText>
             </div>
-            <SkeletonCard title="어울리는 나이차이" />
-            <div className="mt-3">
-              <SkeletonCard title="이별을 결심하는 계기" />
-            </div>
-            <div className="mt-3">
-              <SkeletonCard title="결혼을 결심하는 계기" />
-            </div>
-            <SkeletonCard title="추천 결혼 시기" />
-            <div className="mt-3">
+            <div className="space-y-3">
+              <SkeletonCard title="어울리는 나이차이" />
+              <SkeletonCard title="추천 결혼 시기" />
               <SkeletonCard title="결혼 상대 예측" />
-            </div>
-            <div className="mt-3">
               <SkeletonCard title="주의해야 할 연애" />
             </div>
           </section>
@@ -293,23 +361,26 @@ export default function ResultPage() {
                   {userName}님의 전반적인 재물운
                 </p>
                 <div className="text-sm text-black leading-relaxed min-h-[48px]">
-                  {result.investmentWealth ? (
-                    splitParagraphs(result.investmentWealth).map((p, i) => (
-                      <p key={i} className="mb-3 last:mb-0">
-                        {p}
-                      </p>
-                    ))
-                  ) : (typeof result.investment === "string" && result.investment.trim().length > 0) ? (
-                    splitParagraphs(result.investment).map((p, i) => (
-                      <p key={i} className="mb-3 last:mb-0">
-                        {p}
-                      </p>
-                    ))
-                  ) : (
-                    <span className="italic text-saju-muted">
-                      (추후 채워넣을 영역)
-                    </span>
-                  )}
+                  {(() => {
+                    const source =
+                      result.investmentWealth ||
+                      (typeof result.investment === "string" && result.investment.trim().length > 0
+                        ? result.investment
+                        : "");
+                    const paras = splitParagraphs(source);
+                    const firstTwo = paras.slice(0, 2);
+                    return firstTwo.length > 0 ? (
+                      firstTwo.map((p, i) => (
+                        <p key={i} className="mb-3 last:mb-0">
+                          {p}
+                        </p>
+                      ))
+                    ) : (
+                      <span className="italic text-saju-muted">
+                        (추후 채워넣을 영역)
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="bg-white rounded-2xl px-5 py-4 border border-saju-border">
@@ -335,17 +406,29 @@ export default function ResultPage() {
                   주의해야 할 점
                 </p>
                 <div className="text-sm text-black leading-relaxed min-h-[48px]">
-                  {result.investmentCaution ? (
-                    splitParagraphs(result.investmentCaution).map((p, i) => (
-                      <p key={i} className="mb-3 last:mb-0">
-                        {p}
-                      </p>
-                    ))
-                  ) : (
-                    <span className="italic text-saju-muted">
-                      (추후 채워넣을 영역)
-                    </span>
-                  )}
+                  {(() => {
+                    if (result.investmentCaution) {
+                      return splitParagraphs(result.investmentCaution).map((p, i) => (
+                        <p key={i} className="mb-3 last:mb-0">
+                          {p}
+                        </p>
+                      ));
+                    }
+                    const source =
+                      result.investmentWealth ||
+                      (typeof result.investment === "string" && result.investment.trim().length > 0
+                        ? result.investment
+                        : "");
+                    const paras = splitParagraphs(source);
+                    const third = paras[2];
+                    return third ? (
+                      <p className="mb-0">{third}</p>
+                    ) : (
+                      <span className="italic text-saju-muted">
+                        (추후 채워넣을 영역)
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -370,6 +453,23 @@ export default function ResultPage() {
               </BodyText>
             </div>
           </section>
+
+          {/* 분석 참고사항 (한계·가정·해결책) */}
+          {result.analysisLogs && result.analysisLogs.length > 0 && (
+            <section className="mt-6">
+              <details className="bg-saju-border/30 rounded-2xl px-4 py-3 border border-saju-border">
+                <summary className="text-sm font-medium text-saju-muted cursor-pointer list-none flex items-center gap-2">
+                  <span className="text-saju-muted">분석 참고사항</span>
+                  <span className="text-xs">(한계·가정·해결책)</span>
+                </summary>
+                <ul className="mt-3 space-y-2 text-xs text-saju-muted pl-0 list-disc list-inside">
+                  {result.analysisLogs.map((log, i) => (
+                    <li key={i}>{log}</li>
+                  ))}
+                </ul>
+              </details>
+            </section>
+          )}
         </div>
 
         <div className="pt-10 pb-4">
