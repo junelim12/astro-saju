@@ -37,8 +37,30 @@ export type AnalyzeResponse = {
   personality_2?: string;
   personality_3?: string;
   career: string;
+  /** 직업과 진로 — 어울리는 직업 (사주 십성·오행 로직 기반, 정합도 내림차순 3~5개) */
+  careerJobsSaju?: string[];
+  /** 직업과 진로 — 어울리는 직업 (별자리 태양/달/상승 로직 기반, 정합도 내림차순 3~5개) */
+  careerJobsZodiac?: string[];
+  /** 직업과 진로 — 추천 산업 (사주 로직 기반, 정합도 내림차순 3~5개) */
+  careerIndustriesSaju?: string[];
+  /** 직업과 진로 — 추천 산업 (별자리 로직 기반, 정합도 내림차순 3~5개) */
+  careerIndustriesZodiac?: string[];
   love: string;
+  /** 로맨스 — 어울리는 나이차이 (사주+별자리 결합 로직, 한 단락) */
+  loveAgeGap?: string;
+  /** 로맨스 — 추천 결혼 시기 */
+  loveMarriageTiming?: string;
+  /** 로맨스 — 결혼 상대 예측 */
+  loveSpousePrediction?: string;
+  /** 로맨스 — 주의해야 할 연애 */
+  loveCaution?: string;
   investment: string;
+  /** 재물과 투자 — 전반적인 재물운 */
+  investmentWealth?: string;
+  /** 재물과 투자 — 투자성향 */
+  investmentStyle?: string;
+  /** 재물과 투자 — 주의해야 할 점 */
+  investmentCaution?: string;
   destiny: string;
   dayStem?: string;
   stemElement?: string;
@@ -62,6 +84,16 @@ function normalizeToString(value: any): string {
       .join("\n\n");
   }
   return String(value);
+}
+
+/** LLM이 배열이 아닌 형태로 응답해도 안전하게 문자열 배열로 정규화 (최대 max개) */
+function normalizeToStringArray(value: unknown, max = 5): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const items = value
+    .map((v) => (typeof v === "string" ? v : normalizeToString(v)).trim())
+    .filter(Boolean)
+    .slice(0, max);
+  return items.length > 0 ? items : undefined;
 }
 
 export async function POST(request: Request) {
@@ -182,26 +214,62 @@ B. personality_3 (맨 위 "사주와 별자리를 결합한 성격" 섹션용)
 // 3. Step 2: 직업 & 연애 (별자리 반영 강화)
 function promptStep2() {
     return `
-OUTPUT FORMAT: JSON with keys "career", "love".
+OUTPUT FORMAT: JSON with keys "career", "love", "careerJobsSaju", "careerJobsZodiac", "careerIndustriesSaju", "careerIndustriesZodiac", "loveAgeGap", "loveMarriageTiming", "loveSpousePrediction", "loveCaution".
 
 C. career
 - **Derive only from** Saju (십성 ${dayPillarCore.structuralRelation}, 오행 ${dayPillarCore.stemElement}) + Zodiac (태양/달/상승 설명문). Subject: "${name}님".
 - Structure (3 paragraphs): 1) Industries/roles that **follow from** the logic (e.g. 재성→실행·관리, 관성→규율·리더십, 식상→표현·창작; + 별자리 스타일). 2) Work style **derived from** same. 3) Boss/coworker synergy **from** 오행 상생·상극 or 별자리 관계. No generic advice.
 
+C-1. careerJobsSaju
+- Array of 3–5 strings. Each item format: "{구체적 직업명} — {그 직업이 왜 맞는지 십성·오행 로직에서 도출된 한 줄 근거}".
+- Derive **strictly from** 사주 십성(${dayPillarCore.structuralRelation}) + 오행(${dayPillarCore.stemElement}) logic — the SAME logic used in "career" above. Do NOT use Zodiac here.
+- Order the array by **정합도(로직과의 부합도) 내림차순** — the job most directly derivable from this person's 십성·오행 comes first.
+
+C-2. careerJobsZodiac
+- Array of 3–5 strings, same "{직업명} — {근거}" format.
+- Derive **strictly from** the given 태양/달/상승 설명문 above. Do NOT use Saju here.
+- Order by 정합도 내림차순.
+
+C-3. careerIndustriesSaju
+- Array of 3–5 strings, "{산업/업종명} — {근거}" format, derived **strictly from** 사주 십성·오행 logic (same as careerJobsSaju, but industries/sectors rather than job titles — e.g. 재성→금융·유통·부동산 실행 산업).
+- Order by 정합도 내림차순.
+
+C-4. careerIndustriesZodiac
+- Array of 3–5 strings, "{산업/업종명} — {근거}" format, derived **strictly from** 태양/달/상승 설명문.
+- Order by 정합도 내림차순.
+
 D. love
 - **Derive only from** Zodiac (태양/달/상승 = 자아·감정·첫인상) + Saju (일주 십성·오행). Subject: "${name}님". Use the given Sun/Moon/Rising descriptions as basis; no stereotype phrases.
 - Structure (3 paragraphs): 1) Romantic atmosphere & dating style **from** the logic. 2) Bad type vs Good type **from** 상극/상생 or 별자리 충돌·조화. 3) Long-term partner traits **from** data. No filler.
+
+D-1. loveAgeGap (어울리는 나이차이)
+- Single string, 1 sentence. State a **concrete age-gap range** (e.g. "동갑이거나 연상 1~3세") followed by a short reason **derived from** 십성(${dayPillarCore.structuralRelation}) + 오행 상생·상극 or 별자리 궁합 논리. Subject: "${name}님".
+
+D-2. loveMarriageTiming (추천 결혼 시기)
+- Single string, 1 sentence. State a **concrete life-stage/age range** for marriage, derived **only from** available data: 연월시지-일지 합·충·형·파 (${pillarRelations.year.label} / ${pillarRelations.month.label} / ${pillarRelations.hour.label}) + 별자리 감정 안정 패턴(달/상승). No generic "때가 되면 자연스럽게" — must tie to a specific relation or sign trait. Subject: "${name}님".
+
+D-3. loveSpousePrediction (결혼 상대 예측)
+- Single string, 2 sentences describing predicted spouse traits. **Derive from** 십성 중 재성(배우자를 의미) 관점 — 일지가 재성이면 그 오행·성질을, 아니면 일지 오행이 배우자와의 관계에 어떻게 작용하는지 — **plus** 별자리(태양/달/상승) 조합. Subject: "${name}님".
+
+D-4. loveCaution (주의해야 할 연애)
+- Single string, 1-2 sentences. Dating pitfall **derived from** 오행 상극 관계 or 별자리 충돌(태양/달/상승 간 불일치) — specific to this person's data, not generic "다투지 마세요". Subject: "${name}님".
 `;
     }
 
     // 4. Step 3: 재물 & 운명
     function promptStep3() {
       return `
-OUTPUT FORMAT: JSON with keys "investment", "destiny".
+OUTPUT FORMAT: JSON with keys "investmentWealth", "investmentStyle", "investmentCaution", "destiny".
 
-E. investment
+E-1. investmentWealth (전반적인 재물운)
 - **Derive only from** Saju: 일주 십성(일지 관계)이 재물 해석의 기준—재성/식상/인성/관성/비겁 각각의 의미를 적용. Subject: "${name}님".
-- Structure (3 paragraphs): 1) Attitude toward money **from** 십성·오행 (e.g. 재성=극하는 기운→재물에 대한 태도). 2) How to earn **from** same logic. 3) Leaks & solutions **from** data (오행 상극·신살 등). No generic "절약하세요" without logic tie.
+- Single string, 1-2 sentences: attitude toward money **derived from** 십성·오행 (e.g. 재성=극하는 기운→재물에 대한 태도).
+
+E-2. investmentStyle (투자성향)
+- Single string, 1-2 sentences: 투자 스타일(공격적/보수적/장기/단기/직접실행형/안전선호형 등) **derived from** 오행(${dayPillarCore.stemElement}/${dayPillarCore.branchElement}) 에너지 (예: 목=성장·확장→공격적, 금=결단·규칙→보수적) + 십성(${dayPillarCore.structuralRelation}) 관계. No generic "분산투자하세요" without logic tie. Subject: "${name}님".
+
+E-3. investmentCaution (주의해야 할 점)
+- Single string, 1-2 sentences: money leaks & solution **derived from** 오행 상극 or 신살 data (있는 경우). No generic "절약하세요" without logic tie. Subject: "${name}님".
 
 F. destiny
 - **Only from** Saju (연월일시, 일주 십성·오행) + Zodiac (태양/달/상승 설명문). Subject: "${name}님". Structure:
@@ -254,8 +322,30 @@ F. destiny
         personality_3: p3 || undefined,
       }),
       career: normalizeToString(step2.career),
+      careerJobsSaju: normalizeToStringArray(step2.careerJobsSaju),
+      careerJobsZodiac: normalizeToStringArray(step2.careerJobsZodiac),
+      careerIndustriesSaju: normalizeToStringArray(step2.careerIndustriesSaju),
+      careerIndustriesZodiac: normalizeToStringArray(step2.careerIndustriesZodiac),
       love: normalizeToString(step2.love),
-      investment: normalizeToString(step3.investment),
+      loveAgeGap: normalizeToString(step2.loveAgeGap).trim() || undefined,
+      loveMarriageTiming:
+        normalizeToString(step2.loveMarriageTiming).trim() || undefined,
+      loveSpousePrediction:
+        normalizeToString(step2.loveSpousePrediction).trim() || undefined,
+      loveCaution: normalizeToString(step2.loveCaution).trim() || undefined,
+      investment: [
+        normalizeToString(step3.investmentWealth),
+        normalizeToString(step3.investmentStyle),
+        normalizeToString(step3.investmentCaution),
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+      investmentWealth:
+        normalizeToString(step3.investmentWealth).trim() || undefined,
+      investmentStyle:
+        normalizeToString(step3.investmentStyle).trim() || undefined,
+      investmentCaution:
+        normalizeToString(step3.investmentCaution).trim() || undefined,
       destiny: normalizeToString(step3.destiny),
       dayStem: dayPillarCore.dayStem,
       stemElement: dayPillarCore.stemElement,

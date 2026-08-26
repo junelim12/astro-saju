@@ -26,7 +26,18 @@ type AnalyzeResponse = {
   one_line: string;
   personality: string;
   career: string;
+  /** 어울리는 직업 — 사주/별자리 로직별 정합도순 추천 (3~5개) */
+  careerJobsSaju?: string[];
+  careerJobsZodiac?: string[];
+  /** 추천 산업 — 사주/별자리 로직별 정합도순 추천 (3~5개) */
+  careerIndustriesSaju?: string[];
+  careerIndustriesZodiac?: string[];
   love: string;
+  /** 로맨스 — 어울리는 나이차이 / 추천 결혼 시기 / 결혼 상대 예측 / 주의해야 할 연애 */
+  loveAgeGap?: string;
+  loveMarriageTiming?: string;
+  loveSpousePrediction?: string;
+  loveCaution?: string;
   investment: string;
   destiny: string;
   /** 재물과 투자 — 전반적인 재물운 (상세 카드용) */
@@ -82,16 +93,43 @@ function BodyText({ children }: { children: React.ReactNode }) {
 
 function SkeletonCard({
   title,
+  items,
+  text,
   children,
 }: {
   title: string;
+  /** 정합도 내림차순으로 정렬된 추천 항목 (3~5개). 있으면 최우선으로 리스트 렌더링 */
+  items?: string[];
+  /** 단락 텍스트. items가 없을 때 이걸 문단으로 렌더링 */
+  text?: string;
   children?: React.ReactNode;
 }) {
+  const paragraphs = text ? splitParagraphs(text) : [];
   return (
     <div className="bg-white rounded-2xl px-5 py-4 border border-saju-border">
       <p className="text-xs font-medium text-saju-muted mb-2">{title}</p>
-      <div className="min-h-[60px] text-sm text-saju-muted">
-        {children ?? <span className="italic">(추후 채워넣을 영역)</span>}
+      <div className="min-h-[60px] text-sm">
+        {items && items.length > 0 ? (
+          <ul className="space-y-1.5 list-disc list-inside marker:text-saju-muted text-black">
+            {items.map((item, i) => (
+              <li key={i} className="leading-relaxed">
+                {item}
+              </li>
+            ))}
+          </ul>
+        ) : paragraphs.length > 0 ? (
+          <div className="text-black leading-relaxed space-y-2">
+            {paragraphs.map((p, i) => (
+              <p key={i} className="mb-0">
+                {p}
+              </p>
+            ))}
+          </div>
+        ) : (
+          children ?? (
+            <span className="italic text-saju-muted">(추후 채워넣을 영역)</span>
+          )
+        )}
       </div>
     </div>
   );
@@ -302,13 +340,13 @@ export default function ResultPage() {
             <SectionTitle>직업과 진로</SectionTitle>
             <SubTitle>어울리는 직업</SubTitle>
             <div className="space-y-3 mb-4">
-              <SkeletonCard title="사주 추천 ✨" />
-              <SkeletonCard title="별자리 추천 ✨" />
+              <SkeletonCard title="사주 추천 ✨" items={result.careerJobsSaju} />
+              <SkeletonCard title="별자리 추천 ✨" items={result.careerJobsZodiac} />
             </div>
             <SubTitle>추천 산업</SubTitle>
             <div className="space-y-3 mb-4">
-              <SkeletonCard title="사주 추천 ✨" />
-              <SkeletonCard title="별자리 추천 ✨" />
+              <SkeletonCard title="사주 추천 ✨" items={result.careerIndustriesSaju} />
+              <SkeletonCard title="별자리 추천 ✨" items={result.careerIndustriesZodiac} />
             </div>
             <SubTitle>{userName}님의 업무 스타일과 소통 방식</SubTitle>
             <div className="bg-white rounded-2xl px-5 py-4 border border-saju-border mb-4">
@@ -344,10 +382,10 @@ export default function ResultPage() {
               </BodyText>
             </div>
             <div className="space-y-3">
-              <SkeletonCard title="어울리는 나이차이" />
-              <SkeletonCard title="추천 결혼 시기" />
-              <SkeletonCard title="결혼 상대 예측" />
-              <SkeletonCard title="주의해야 할 연애" />
+              <SkeletonCard title="어울리는 나이차이" text={result.loveAgeGap} />
+              <SkeletonCard title="추천 결혼 시기" text={result.loveMarriageTiming} />
+              <SkeletonCard title="결혼 상대 예측" text={result.loveSpousePrediction} />
+              <SkeletonCard title="주의해야 할 연애" text={result.loveCaution} />
             </div>
           </section>
 
