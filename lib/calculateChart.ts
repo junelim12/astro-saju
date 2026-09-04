@@ -36,7 +36,7 @@ function longitudeToSignIndex(longitude: number): number {
   return Math.floor(normalized / 30) % 12;
 }
 
-function signIndexToKorean(index: number): string {
+function signIndexToSignName(index: number): string {
   return ZODIAC_SIGNS_BY_INDEX[index];
 }
 
@@ -189,8 +189,8 @@ export async function calculateChart(input: ChartInput): Promise<ChartResult> {
   const ascendantLongitude = calcAscendant(jdUt, latitude, longitude);
 
   return {
-    sunSign: signIndexToKorean(longitudeToSignIndex(sunLongitude)),
-    moonSign: signIndexToKorean(longitudeToSignIndex(moonLongitude)),
-    risingSign: signIndexToKorean(longitudeToSignIndex(ascendantLongitude)),
+    sunSign: signIndexToSignName(longitudeToSignIndex(sunLongitude)),
+    moonSign: signIndexToSignName(longitudeToSignIndex(moonLongitude)),
+    risingSign: signIndexToSignName(longitudeToSignIndex(ascendantLongitude)),
   };
 }

@@ -10,25 +10,34 @@ import {
 
 export const maxDuration = 60;
 
-/** 해석 기준: 십성(일간-일지 관계)별 의미 — 키워드 조합이 아닌 이 로직으로만 유도 */
+/** Interpretation basis: what each Ten God (Day Stem vs Day Branch relation) means — never invent from keywords alone */
 const SIBSEONG_LOGIC = `
-- **비겁** (일지가 나와 같은 오행): 동료·경쟁·자기주장·동년배. 재물은 나와 나눠 씀.
-- **식상** (일지가 내가 생하는 오행): 표현·창작·소통·자식. 재물은 표현을 통해 벌거나 쓰임.
-- **재성** (일지가 내가 극하는 오행): 재물·실행·관리·배우자. 일지에 재성이 있으면 재물에 대한 태도/방식이 이 관계로 해석됨.
-- **인성** (일지가 나를 생하는 오행): 학문·귀인·보호·어머니. 일지에 인성이 있으면 배움·보호받음·원조 쪽 성향.
-- **관성** (일지가 나를 극하는 오행): 규율·압박·책임·직업·아버지. 일지에 관성이 있으면 원칙·부담·리더십 쪽 성향.
+- **Companion** (Day Branch is the same element as you): peers, competition, self-assertion, people your age. Wealth is shared with others.
+- **Expression** (Day Branch is the element you produce): self-expression, creativity, communication, children. Wealth is earned or spent through self-expression.
+- **Wealth** (Day Branch is the element you control): money, execution, management, spouse. If Wealth sits in the Day Branch, it shapes this person's whole attitude toward and approach to money.
+- **Resource** (Day Branch is the element that produces you): learning, mentors/benefactors, being protected, mother. If Resource sits in the Day Branch, it leans toward learning, being protected, and receiving support.
+- **Authority** (Day Branch is the element that controls you): discipline, pressure, responsibility, career, father. If Authority sits in the Day Branch, it leans toward principle, pressure, and leadership.
 `;
-/** 오행별 에너지 — 성격/직업/재물 해석 시 이 의미를 적용 */
+/** Five Elements energy — apply this meaning when interpreting personality/career/wealth */
 const OHENG_LOGIC = `
-- 목: 성장·직선·인내·확장. 화: 빛·표현·열정·주목. 토: 중앙·포용·안정·중재. 금: 정의·정리·결단·규칙. 수: 지혜·유동·침착·융통.
+- Wood: growth, directness, persistence, expansion. Fire: light, expression, passion, the spotlight. Earth: centeredness, tolerance, stability, mediation. Metal: justice, order, decisiveness, discipline. Water: wisdom, adaptability, calm, flexibility.
 `;
-/** 연·월·시 지지와 일지 간 합·충·형·파 해석 기준 — 이 데이터가 있으면 반드시 반영 */
+/** Combination/Clash/Punishment/Break between the Year/Month/Hour Branch and the Day Branch — reflect this whenever the data is present */
 const PILLAR_RELATION_GUIDE = `
-- **연지-일지**: 뿌리·초년운·가족·출신. **합**=가족/출신과 조화·지원. **충**=초년 변동·가족과 갈등·이동. **형**=부담·압박·갈등. **파**=미묘한 틈·해이.
-- **월지-일지**: 부모·청년·사회적 기반. **합**=부모·상사와 조화·귀인. **충**=청년기 변동·관계 갈등. **형**=책임·압박·갈등. **파**=불협화·소원.
-- **시지-일지**: 자녀·말년·결과. **합**=자녀·말년과 조화·안정. **충**=말년 변동·자녀와 다른 성향. **형**=말년 부담. **파**=미묘한 거리감.
-- 위 관계가 **합**이면 해당 영역(연/월/시)을 긍정적으로, **충·형·파**가 있으면 해당 영역에서 변동·갈등·보완이 필요함을 해석에 반영하라.
+- **Year Branch - Day Branch**: roots, early life, family, origins. **Combination** = harmony/support from family or origins. **Clash** = upheaval in early life, conflict with family, relocation. **Punishment** = burden, pressure, conflict. **Break** = a subtle rift or slack.
+- **Month Branch - Day Branch**: parents, young adulthood, social foundation. **Combination** = harmony with parents/superiors, a benefactor. **Clash** = upheaval in young adulthood, relationship conflict. **Punishment** = responsibility, pressure, conflict. **Break** = friction, distance.
+- **Hour Branch - Day Branch**: children, later life, outcomes. **Combination** = harmony/stability with children or in later life. **Clash** = upheaval in later life, a child with a very different temperament. **Punishment** = a burden in later life. **Break** = a subtle sense of distance.
+- If the relation above is a **Combination**, describe that area (year/month/hour) positively. If it's a **Clash, Punishment, or Break**, describe that area as needing change, conflict, or repair.
 `;
+
+/** Korean single-character element -> English, for clean inline use in English prompts */
+const ELEMENT_EN: Record<string, string> = {
+  목: "Wood", 화: "Fire", 토: "Earth", 금: "Metal", 수: "Water",
+};
+function elementEn(el: string | undefined): string {
+  if (!el) return "";
+  return ELEMENT_EN[el] ?? el;
+}
 
 export type AnalyzeResponse = {
   one_line: string;
@@ -37,37 +46,26 @@ export type AnalyzeResponse = {
   personality_2?: string;
   personality_3?: string;
   career: string;
-  /** 직업과 진로 — 어울리는 직업 (사주 십성·오행 로직 기반, 정합도 내림차순 3~5개) */
+  /** Jobs that fit you — Saju logic, ranked by fit, 3-5 items */
   careerJobsSaju?: string[];
-  /** 직업과 진로 — 어울리는 직업 (별자리 태양/달/상승 로직 기반, 정합도 내림차순 3~5개) */
+  /** Jobs that fit you — Stars logic, ranked by fit, 3-5 items */
   careerJobsZodiac?: string[];
-  /** 직업과 진로 — 추천 산업 (사주 로직 기반, 정합도 내림차순 3~5개) */
+  /** Industries to explore — Saju logic, ranked by fit, 3-5 items */
   careerIndustriesSaju?: string[];
-  /** 직업과 진로 — 추천 산업 (별자리 로직 기반, 정합도 내림차순 3~5개) */
+  /** Industries to explore — Stars logic, ranked by fit, 3-5 items */
   careerIndustriesZodiac?: string[];
   love: string;
-  /** 로맨스 — 어울리는 나이차이 (사주+별자리 결합 로직, 한 단락) */
-  loveAgeGap?: string;
-  /** 로맨스 — 추천 결혼 시기 */
-  loveMarriageTiming?: string;
-  /** 로맨스 — 결혼 상대 예측 */
+  /** Love — who you might marry */
   loveSpousePrediction?: string;
-  /** 로맨스 — 주의해야 할 연애 */
+  /** Love — what to watch out for */
   loveCaution?: string;
-  investment: string;
-  /** 재물과 투자 — 전반적인 재물운 */
-  investmentWealth?: string;
-  /** 재물과 투자 — 투자성향 */
-  investmentStyle?: string;
-  /** 재물과 투자 — 주의해야 할 점 */
-  investmentCaution?: string;
   destiny: string;
   dayStem?: string;
   stemElement?: string;
   sunSign?: string;
   moonSign?: string;
   risingSign?: string;
-  /** 한계·가정·참고사항 — 원인과 해결책 안내 */
+  /** Assumptions / limitations behind this reading */
   analysisLogs?: string[];
 };
 
@@ -86,7 +84,7 @@ function normalizeToString(value: any): string {
   return String(value);
 }
 
-/** LLM이 배열이 아닌 형태로 응답해도 안전하게 문자열 배열로 정규화 (최대 max개) */
+/** Normalizes an LLM response field into a string array even if it wasn't shaped as one (max items capped) */
 function normalizeToStringArray(value: unknown, max = 5): string[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const items = value
@@ -111,14 +109,14 @@ export async function POST(request: Request) {
     let hour = parseInt(body.hour, 10);
     const minute = parseInt(body.minute, 10);
     const ampm = body.ampm || "AM";
-    const locationInput = body.location || "서울";
-    const name = body.name || "내담자";
+    const locationInput = body.location || "New York";
+    const name = body.name || "friend";
 
     if (ampm === "PM" && hour < 12) hour += 12;
     if (ampm === "AM" && hour === 12) hour = 0;
 
     const geo = getCoordinates(locationInput);
-    // Saju 데이터 추출 (zodiac = 태양별자리)
+    // Extract Saju data (zodiac = sun sign)
     const { dayPillarCore, activeShinsal, zodiac, pillars, pillarRelations } = getSaju(year, month, day, hour, minute);
     const moonSign = getMoonSign(year, month, day, hour, minute);
     const risingSign = getRisingSign(hour, minute);
@@ -126,22 +124,22 @@ export async function POST(request: Request) {
     const moonDesc = MOON_SIGN_DESCRIPTIONS[moonSign] ?? "";
     const risingDesc = RISING_SIGN_DESCRIPTIONS[risingSign] ?? "";
 
-    // 한계·가정 로그 (원인 + 해결책)
+    // Assumption / limitation notes
     const analysisLogs: string[] = [];
     if (!body.location || body.location.trim() === "") {
       analysisLogs.push(
-        "원인: 출생지 미입력. 해결: 위치를 입력하면 해당 지역 좌표·시간대로 보정됩니다."
+        "Note: no birthplace was entered. Enter one to get coordinates and time-zone-corrected results for that location."
       );
     }
     analysisLogs.push(
-      "참고: 상승궁은 생시만으로 근사(2시간당 1궁)하며, 지역별 정확한 상승궁은 출생지·정확 시간이 필요합니다."
+      "Note: your Rising Sign is approximated from birth time alone (one sign per ~2 hours). An exact Rising Sign requires your precise birthplace and time."
     );
     analysisLogs.push(
-      "참고: 달별자리는 날짜·시간 기반 근사치이며, 정밀 계산은 천문 데이터가 필요합니다."
+      "Note: your Moon Sign is approximated from date and time; a precise calculation requires full astronomical data."
     );
     if (activeShinsal.length === 0) {
       analysisLogs.push(
-        "참고: 이 사주에는 적용되는 12신살·특수신살이 없어, 신살 항목은 해석에서 제외되었습니다."
+        "Note: none of the special \"Shinsal\" stars apply to this chart, so that section was left out of the reading."
       );
     }
 
@@ -151,138 +149,131 @@ export async function POST(request: Request) {
     const geoSeed = Math.floor((geo.lat + geo.lng) * 1000);
     const finalSeed = timeSeed + geoSeed;
 
-    // 1. System Prompt (기본 설정 & 데이터 주입)
+    const stemElEn = elementEn(dayPillarCore.stemElement);
+    const branchElEn = elementEn(dayPillarCore.branchElement);
+
+    // 1. System Prompt (base setup & data injection)
     const SYSTEM_PROMPT = `
-You are an expert Fortune Teller who integrates Eastern Four Pillars (Saju) and Western Modern Astrology.
+You are an expert Fortune Teller who integrates Eastern Saju and Western Modern Astrology, writing for a US audience.
 
 Your Goal:
 Provide a personalized, insightful, and "bone-hitting" (sharp & accurate) analysis.
-The output language must be **Korean (Polite Honorifics/존댓말)**.
+The output language must be **natural, conversational American English**.
 
-[Naming Convention - VERY IMPORTANT]
-- **ALWAYS** use the user's name: **"${name}님"** as the subject of sentences.
-- Instead of saying "${dayPillarCore.dayPillar}일주는...", say "${name}님은...".
+[Voice - VERY IMPORTANT]
+- Address the reader directly as **"you"/"your"** throughout, second person — never third person.
+- You may use their name, **"${name}"**, once or twice for warmth (e.g. "${name}, your Day Master suggests..."), but do NOT repeat the name in every sentence, and never attach honorifics to it.
+- Write like a sharp, warm American astrology app (think Co-Star or The Pattern), not a formal report.
 
 [Confirmed Analytical Data]
-1. Four Pillars (사주): Year(연주)=${pillars.year}, Month(월주)=${pillars.month}, Day(일주)=${pillars.day}, Hour(시주)=${pillars.hour}
-   - Day Pillar (일주): ${dayPillarCore.dayPillar} — 일간 ${dayPillarCore.dayStem}(${dayPillarCore.stemElement}), 일지 ${dayPillarCore.dayBranch}(${dayPillarCore.branchElement}), **십성(일간-일지 관계): ${dayPillarCore.structuralRelation}**
-2. Western Zodiac (태양=${zodiac}, 달=${moonSign}, 상승=${risingSign})
-   - 태양(자아·목표): ${sunDesc}
-   - 달(감정·필요): ${moonDesc}
-   - 상승(첫인상·행동): ${risingDesc}
-3. Active Shinsal:
-${activeShinsal.length ? activeShinsal.map(s => `   - ${s.name}: ${s.description}`).join("\n") : "   (없음)"}
-4. 연·월·시 지지와 일지(日支) 간 합·충·형·파:
+1. Saju: Year=${pillars.year}, Month=${pillars.month}, Day=${pillars.day}, Hour=${pillars.hour}
+   - Day Pillar: ${dayPillarCore.dayPillar} — Day Stem element ${stemElEn}, Day Branch element ${branchElEn}, **Ten God (Day Stem vs Day Branch relation): ${dayPillarCore.structuralRelation}**
+2. Western Zodiac (Sun=${zodiac}, Moon=${moonSign}, Rising=${risingSign})
+   - Sun (identity/goals): ${sunDesc}
+   - Moon (emotions/needs): ${moonDesc}
+   - Rising (first impression/behavior): ${risingDesc}
+3. Active Shinsal (special stars):
+${activeShinsal.length ? activeShinsal.map(s => `   - ${s.name}: ${s.description}`).join("\n") : "   (none)"}
+4. Combination/Clash/Punishment/Break between the Year/Month/Hour Branch and the Day Branch:
    - ${pillarRelations.year.label}
    - ${pillarRelations.month.label}
    - ${pillarRelations.hour.label}
 
-[Interpretation Logic - Use as the ONLY basis; do not invent from keywords]
-**사주:** ${SIBSEONG_LOGIC}
-**오행:** ${OHENG_LOGIC}
-**연월시지-일지 합·충·형·파:** ${PILLAR_RELATION_GUIDE}
-- 연주=뿌리/초년, 월주=부모/청년, 일주=자신/부부, 시주=자녀/말년. 성격·직업·재물·운명 해석 시 위 **합·충·형·파**가 있으면 해당 영역(연/월/시)을 반드시 반영하라.
-**별자리:** 태양=자아·목표, 달=감정·필요, 상승=외적 행동·첫인상. 위 "태양/달/상승" 설명문을 **근거**로 사용하고, 그 결론만 서술하라.
-**결합:** 사주와 별자리가 같은 방향이면 강화, 반대면 충돌로 서술.
+[Interpretation Logic - use as the ONLY basis; do not invent from keywords]
+**Saju (Ten Gods):** ${SIBSEONG_LOGIC}
+**Five Elements:** ${OHENG_LOGIC}
+**Year/Month/Hour Branch vs Day Branch relations:** ${PILLAR_RELATION_GUIDE}
+- Year Pillar = roots/early life, Month Pillar = parents/young adulthood, Day Pillar = self/spouse, Hour Pillar = children/later life. When interpreting personality, career, wealth, or destiny, you MUST reflect the **Combination/Clash/Punishment/Break** relations above wherever they apply.
+**Astrology:** Sun = identity/goals, Moon = emotions/needs, Rising = outward behavior/first impression. Use the Sun/Moon/Rising description text above as your **evidence**, and only state the conclusions drawn from it.
+**Combining the two systems:** when Saju and Astrology point the same direction, describe it as reinforcing; when they point in different directions, describe it as tension/conflict.
+
+[US market context - VERY IMPORTANT]
+- This reader lives in (or identifies with) the US. Every job, industry, and lifestyle example must be **grounded in the US job market and culture** — recognizable US-style roles, industries, and work arrangements (in-house, startup, freelance/self-employed, remote, agency, nonprofit, government, etc.).
+- **Never** classify companies or jobs by Korean-style corporate size tiers (e.g. "conglomerate vs. small-and-medium business" / chaebol-style framing) — this distinction doesn't map onto the US job market and must not appear anywhere in the output.
 
 [Rules]
 - **Every sentence must be derived from the Analytical Data + Interpretation Logic above.** Do NOT state the obvious; do NOT combine one or two keywords with generic situations to produce plausible-sounding text.
 - If you cannot derive a point from the data, omit it or be brief. Prefer precise, logic-based analysis over filler.
-- Use "${name}님" as subject. No "If you...", "In some cases...".
+- Second person ("you/your") throughout. No "If you...", "In some cases...", no hedging.
+- Always call this system **"Saju"** — never write "Four Pillars" or "Bazi" anywhere in your output.
 `;
 
-    // 2. Step 1: 한줄요약 & 성격 (기질 = 사주 중심 2문단, 결합 = 1문단)
+    // 2. Step 1: one-line summary & personality (temperament = Saju-centric, 2 paragraphs; combined = 1 paragraph)
     function promptStep1() {
       return `
 OUTPUT FORMAT: JSON with keys "one_line", "personality_1", "personality_2", "personality_3".
 Each of personality_1, personality_2, personality_3 must be a single string (one paragraph). No newlines inside each string.
 
 A. one_line
-- One-sentence life-direction summary **derived from** the Analytical Data and Interpretation Logic (사주 십성·오행 + 별자리 태양/달/상승). No generic metaphors; tie to this person's data. Include "${name}님".
+- One-sentence life-direction summary **derived from** the Analytical Data and Interpretation Logic (Ten God + Five Elements + Sun/Moon/Rising). No generic metaphors; tie it to this person's data. Second person.
 
-B. personality_1 (기질 카드 1문단)
-- **Only from** 연월일시주 + 십성·오행 해석 기준. Combine Year/Month/Day/Hour pillars using the logic (연주=뿌리, 월주=부모, 일주=자신/십성, 시주=말년). Do NOT mention Zodiac; do NOT list pillar names. Subject: "${name}님".
+B. personality_1 (temperament card, paragraph 1)
+- **Only from** Saju + Ten God/Five Elements logic. Combine the Year/Month/Day/Hour pillars using the logic (Year=roots, Month=parents, Day=self/Ten God, Hour=later life). Do NOT mention astrology; do NOT list pillar names literally. Second person.
 
-B. personality_2 (기질 카드 2문단)
-- MUST start with **"특히,"**. Describe **only from Day Pillar**: 일간-일지 십성(${dayPillarCore.structuralRelation})과 오행(${dayPillarCore.stemElement}/${dayPillarCore.branchElement}) 의미로 유도. No filler. Subject: "${name}님".
+B. personality_2 (temperament card, paragraph 2)
+- MUST start with **"In particular,"**. Describe **only from the Day Pillar**: derive it from the Day Stem-Day Branch Ten God (${dayPillarCore.structuralRelation}) and the Five Elements meaning (${stemElEn}/${branchElEn}). No filler. Second person.
 
-B. personality_3 (맨 위 "사주와 별자리를 결합한 성격" 섹션용)
-- **Only from** 사주(일주 십성·오행) + 별자리(태양/달/상승 설명문). Describe how the two systems combine for this person—where they align or conflict. You may mention ${dayPillarCore.dayPillar}일주. Subject: "${name}님".
+B. personality_3 (for the top "Astrology Meets Saju" section)
+- **Only from** Saju (Day Pillar Ten God/Five Elements) + Astrology (Sun/Moon/Rising description text). Describe how the two systems combine for this person — where they align or conflict. You may mention the ${dayPillarCore.dayPillar} Day Pillar by its Ten God/Element meaning. Second person.
 `;
     }
 
-// 3. Step 2: 직업 & 연애 (별자리 반영 강화)
-function promptStep2() {
-    return `
-OUTPUT FORMAT: JSON with keys "career", "love", "careerJobsSaju", "careerJobsZodiac", "careerIndustriesSaju", "careerIndustriesZodiac", "loveAgeGap", "loveMarriageTiming", "loveSpousePrediction", "loveCaution".
+    // 3. Step 2: career & love (heavier astrology weighting)
+    function promptStep2() {
+      return `
+OUTPUT FORMAT: JSON with keys "career", "love", "careerJobsSaju", "careerJobsZodiac", "careerIndustriesSaju", "careerIndustriesZodiac", "loveSpousePrediction", "loveCaution".
 
 C. career
-- **Derive only from** Saju (십성 ${dayPillarCore.structuralRelation}, 오행 ${dayPillarCore.stemElement}) + Zodiac (태양/달/상승 설명문). Subject: "${name}님".
-- Structure (3 paragraphs): 1) Industries/roles that **follow from** the logic (e.g. 재성→실행·관리, 관성→규율·리더십, 식상→표현·창작; + 별자리 스타일). 2) Work style **derived from** same. 3) Boss/coworker synergy **from** 오행 상생·상극 or 별자리 관계. No generic advice.
+- **Derive only from** Saju (Ten God: ${dayPillarCore.structuralRelation}, Element: ${stemElEn}) + Astrology (Sun/Moon/Rising description text). Second person. US job market only (see [US market context] above).
+- Structure (3 paragraphs): 1) Roles/work that **follow from** the logic (e.g. Wealth -> execution/management, Authority -> discipline/leadership, Expression -> communication/creative work; plus astrological working style). 2) Work style **derived from** the same logic. 3) Manager/coworker synergy **from** Five Elements production/control cycles or astrological compatibility. No generic advice.
 
 C-1. careerJobsSaju
-- Array of 3–5 strings. Each item format: "{구체적 직업명} — {그 직업이 왜 맞는지 십성·오행 로직에서 도출된 한 줄 근거}".
-- Derive **strictly from** 사주 십성(${dayPillarCore.structuralRelation}) + 오행(${dayPillarCore.stemElement}) logic — the SAME logic used in "career" above. Do NOT use Zodiac here.
-- Order the array by **정합도(로직과의 부합도) 내림차순** — the job most directly derivable from this person's 십성·오행 comes first.
+- Array of 3-5 strings. Each item format: "{specific US job title} — {one-line reason drawn from the Ten God/Five Elements logic}".
+- Derive **strictly from** the Saju Ten God (${dayPillarCore.structuralRelation}) + Five Elements (${stemElEn}) logic — the SAME logic used in "career" above. Do NOT use astrology here. Job titles must be ones a US reader would recognize.
+- Order the array by **fit with the logic, highest first** — the job most directly derivable from this person's Ten God/Five Elements comes first.
 
 C-2. careerJobsZodiac
-- Array of 3–5 strings, same "{직업명} — {근거}" format.
-- Derive **strictly from** the given 태양/달/상승 설명문 above. Do NOT use Saju here.
-- Order by 정합도 내림차순.
+- Array of 3-5 strings, same "{job title} — {reason}" format, US-recognizable job titles.
+- Derive **strictly from** the given Sun/Moon/Rising description text above. Do NOT use Saju here.
+- Order by fit with the logic, highest first.
 
 C-3. careerIndustriesSaju
-- Array of 3–5 strings, "{산업/업종명} — {근거}" format, derived **strictly from** 사주 십성·오행 logic (same as careerJobsSaju, but industries/sectors rather than job titles — e.g. 재성→금융·유통·부동산 실행 산업).
-- Order by 정합도 내림차순.
+- Array of 3-5 strings, "{industry/sector} — {reason}" format, derived **strictly from** the Saju Ten God/Five Elements logic (same basis as careerJobsSaju, but industries/sectors rather than job titles — e.g. Wealth -> finance, retail, real estate/execution-heavy industries). Use US industry terms.
+- Order by fit with the logic, highest first.
 
 C-4. careerIndustriesZodiac
-- Array of 3–5 strings, "{산업/업종명} — {근거}" format, derived **strictly from** 태양/달/상승 설명문.
-- Order by 정합도 내림차순.
+- Array of 3-5 strings, "{industry/sector} — {reason}" format, derived **strictly from** the Sun/Moon/Rising description text. Use US industry terms.
+- Order by fit with the logic, highest first.
 
 D. love
-- **Derive only from** Zodiac (태양/달/상승 = 자아·감정·첫인상) + Saju (일주 십성·오행). Subject: "${name}님". Use the given Sun/Moon/Rising descriptions as basis; no stereotype phrases.
-- Structure (3 paragraphs): 1) Romantic atmosphere & dating style **from** the logic. 2) Bad type vs Good type **from** 상극/상생 or 별자리 충돌·조화. 3) Long-term partner traits **from** data. No filler.
+- **Derive only from** Astrology (Sun/Moon/Rising = identity/emotion/first impression) + Saju (Day Pillar Ten God/Element). Second person. Use the given Sun/Moon/Rising descriptions as basis; no stereotype phrases.
+- Structure (3 paragraphs): 1) Romantic atmosphere & dating style **from** the logic. 2) Bad-fit vs. good-fit types **from** Five Elements production/control cycles or astrological clash/harmony. 3) Long-term partner traits **from** the data. No filler.
 
-D-1. loveAgeGap (어울리는 나이차이)
-- Single string, 1 sentence. State a **concrete age-gap range** (e.g. "동갑이거나 연상 1~3세") followed by a short reason **derived from** 십성(${dayPillarCore.structuralRelation}) + 오행 상생·상극 or 별자리 궁합 논리. Subject: "${name}님".
+D-1. loveSpousePrediction (who you might marry)
+- Single string, 2 sentences describing predicted spouse traits. **Derive from** the Wealth Ten God (which represents the spouse) — if the Day Branch is Wealth, use its element/nature; otherwise use how the Day Branch element relates to a spouse — **plus** the Sun/Moon/Rising combination. Second person.
 
-D-2. loveMarriageTiming (추천 결혼 시기)
-- Single string, 1 sentence. State a **concrete life-stage/age range** for marriage, derived **only from** available data: 연월시지-일지 합·충·형·파 (${pillarRelations.year.label} / ${pillarRelations.month.label} / ${pillarRelations.hour.label}) + 별자리 감정 안정 패턴(달/상승). No generic "때가 되면 자연스럽게" — must tie to a specific relation or sign trait. Subject: "${name}님".
-
-D-3. loveSpousePrediction (결혼 상대 예측)
-- Single string, 2 sentences describing predicted spouse traits. **Derive from** 십성 중 재성(배우자를 의미) 관점 — 일지가 재성이면 그 오행·성질을, 아니면 일지 오행이 배우자와의 관계에 어떻게 작용하는지 — **plus** 별자리(태양/달/상승) 조합. Subject: "${name}님".
-
-D-4. loveCaution (주의해야 할 연애)
-- Single string, 1-2 sentences. Dating pitfall **derived from** 오행 상극 관계 or 별자리 충돌(태양/달/상승 간 불일치) — specific to this person's data, not generic "다투지 마세요". Subject: "${name}님".
+D-2. loveCaution (what to watch out for)
+- Single string, 1-2 sentences. A dating pitfall **derived from** a Five Elements control-cycle relationship or an astrological clash (a mismatch between Sun/Moon/Rising) — specific to this person's data, not generic "don't fight." Second person.
 `;
     }
 
-    // 4. Step 3: 재물 & 운명
+    // 4. Step 3: destiny
     function promptStep3() {
       return `
-OUTPUT FORMAT: JSON with keys "investmentWealth", "investmentStyle", "investmentCaution", "destiny".
+OUTPUT FORMAT: JSON with keys "destiny".
 
-E-1. investmentWealth (전반적인 재물운)
-- **Derive only from** Saju: 일주 십성(일지 관계)이 재물 해석의 기준—재성/식상/인성/관성/비겁 각각의 의미를 적용. Subject: "${name}님".
-- Single string, 1-2 sentences: attitude toward money **derived from** 십성·오행 (e.g. 재성=극하는 기운→재물에 대한 태도).
+E. destiny
+- **Only from** Saju (all four pillars, Day Pillar Ten God/Five Elements) + Astrology (Sun/Moon/Rising description text). Second person. Structure:
 
-E-2. investmentStyle (투자성향)
-- Single string, 1-2 sentences: 투자 스타일(공격적/보수적/장기/단기/직접실행형/안전선호형 등) **derived from** 오행(${dayPillarCore.stemElement}/${dayPillarCore.branchElement}) 에너지 (예: 목=성장·확장→공격적, 금=결단·규칙→보수적) + 십성(${dayPillarCore.structuralRelation}) 관계. No generic "분산투자하세요" without logic tie. Subject: "${name}님".
+1) **Two behavioral tendencies reinforced by your Saju** — explicitly tied to the Ten God/Five Elements and pillars (e.g. "because your Day Master sits on Resource...").
 
-E-3. investmentCaution (주의해야 할 점)
-- Single string, 1-2 sentences: money leaks & solution **derived from** 오행 상극 or 신살 data (있는 경우). No generic "절약하세요" without logic tie. Subject: "${name}님".
+2) **Two behavioral tendencies reinforced by your chart's astrology** — explicitly tied to the given Sun/Moon/Rising description text.
 
-F. destiny
-- **Only from** Saju (연월일시, 일주 십성·오행) + Zodiac (태양/달/상승 설명문). Subject: "${name}님". Structure:
+3) **Two places where your Saju and Astrology pull in opposite directions** — derive this from the logic, not from generic situations.
 
-1) **사주가 강화하는 행동 성향 2가지** — Explicitly tied to 십성·오행 and pillars (e.g. "인성 위에 일간이므로...").
+4) **One point where that tension is likely to show up over the next 1-2 years** — derived from the conflict above (e.g. in a specific decision or relationship).
 
-2) **별자리가 강화하는 행동 성향 2가지** — Explicitly tied to the given Sun/Moon/Rising description text.
-
-3) **사주와 별자리가 충돌할 때 2가지** — Where the two systems pull in opposite directions; derive from the logic, not generic situations.
-
-4) **향후 1~2년 내 충돌이 두드러질 수 있는 지점** — One point derived from the above conflict (e.g. 어떤 결정/관계에서).
-
-5) **해결책** — Behavior adjustments that follow from the conflict (e.g. 어떤 쪽을 의식적으로 보완할지). Specific, logic-based.
+5) **A fix** — a behavior adjustment that follows from the conflict (e.g. which side to consciously balance). Specific, logic-based.
 `;
     }
 
@@ -327,25 +318,9 @@ F. destiny
       careerIndustriesSaju: normalizeToStringArray(step2.careerIndustriesSaju),
       careerIndustriesZodiac: normalizeToStringArray(step2.careerIndustriesZodiac),
       love: normalizeToString(step2.love),
-      loveAgeGap: normalizeToString(step2.loveAgeGap).trim() || undefined,
-      loveMarriageTiming:
-        normalizeToString(step2.loveMarriageTiming).trim() || undefined,
       loveSpousePrediction:
         normalizeToString(step2.loveSpousePrediction).trim() || undefined,
       loveCaution: normalizeToString(step2.loveCaution).trim() || undefined,
-      investment: [
-        normalizeToString(step3.investmentWealth),
-        normalizeToString(step3.investmentStyle),
-        normalizeToString(step3.investmentCaution),
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
-      investmentWealth:
-        normalizeToString(step3.investmentWealth).trim() || undefined,
-      investmentStyle:
-        normalizeToString(step3.investmentStyle).trim() || undefined,
-      investmentCaution:
-        normalizeToString(step3.investmentCaution).trim() || undefined,
       destiny: normalizeToString(step3.destiny),
       dayStem: dayPillarCore.dayStem,
       stemElement: dayPillarCore.stemElement,

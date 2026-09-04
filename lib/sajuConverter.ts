@@ -294,11 +294,25 @@ function getJijiRelation(dayBranch: string, otherBranch: string): PillarRelation
   return null;
 }
 
+/** 12지지 -> 영문 띠(Zodiac animal) 표기 — 프롬프트 표시용 */
+const BRANCH_EN: Record<string, string> = {
+  자: "Rat", 축: "Ox", 인: "Tiger", 묘: "Rabbit", 진: "Dragon", 사: "Snake",
+  오: "Horse", 미: "Goat", 신: "Monkey", 유: "Rooster", 술: "Dog", 해: "Pig",
+};
+
+const PILLAR_RELATION_EN: Record<Exclude<PillarRelation, null>, string> = {
+  합: "Combination",
+  충: "Clash",
+  형: "Punishment",
+  파: "Break",
+};
+
 function pillarRelationLabel(pillar: "year" | "month" | "hour", relation: PillarRelation, otherBranch: string): string {
-  const names = { year: "연지", month: "월지", hour: "시지" };
+  const names = { year: "Year Branch", month: "Month Branch", hour: "Hour Branch" };
   const pillarName = names[pillar];
-  if (!relation) return `${pillarName}-일지: 없음`;
-  return `${pillarName}(${otherBranch})-일지: ${relation}`;
+  const branchEn = BRANCH_EN[otherBranch] ?? otherBranch;
+  if (!relation) return `${pillarName}-Day Branch: none`;
+  return `${pillarName}(${branchEn})-Day Branch: ${PILLAR_RELATION_EN[relation]}`;
 }
 
 // 6. 특수 신살 규칙 (일주 기준)
@@ -338,20 +352,20 @@ const GWIMUN_PAIRS: [string, string][] = [
   ["사", "술"],
 ];
 
-// 서양 별자리 데이터
+// Western zodiac date ranges
 const WESTERN_ZODIAC = [
-  { name: "염소자리", from: [12, 22], to: [1, 19] },
-  { name: "물병자리", from: [1, 20], to: [2, 18] },
-  { name: "물고기자리", from: [2, 19], to: [3, 20] },
-  { name: "양자리", from: [3, 21], to: [4, 19] },
-  { name: "황소자리", from: [4, 20], to: [5, 20] },
-  { name: "쌍둥이자리", from: [5, 21], to: [6, 21] },
-  { name: "게자리", from: [6, 22], to: [7, 22] },
-  { name: "사자자리", from: [7, 23], to: [8, 22] },
-  { name: "처녀자리", from: [8, 23], to: [9, 22] },
-  { name: "천칭자리", from: [9, 23], to: [10, 23] },
-  { name: "전갈자리", from: [10, 24], to: [11, 22] },
-  { name: "사수자리", from: [11, 23], to: [12, 21] },
+  { name: "Capricorn", from: [12, 22], to: [1, 19] },
+  { name: "Aquarius", from: [1, 20], to: [2, 18] },
+  { name: "Pisces", from: [2, 19], to: [3, 20] },
+  { name: "Aries", from: [3, 21], to: [4, 19] },
+  { name: "Taurus", from: [4, 20], to: [5, 20] },
+  { name: "Gemini", from: [5, 21], to: [6, 21] },
+  { name: "Cancer", from: [6, 22], to: [7, 22] },
+  { name: "Leo", from: [7, 23], to: [8, 22] },
+  { name: "Virgo", from: [8, 23], to: [9, 22] },
+  { name: "Libra", from: [9, 23], to: [10, 23] },
+  { name: "Scorpio", from: [10, 24], to: [11, 22] },
+  { name: "Sagittarius", from: [11, 23], to: [12, 21] },
 ];
 
 function getWesternZodiac(month: number, day: number): string {
@@ -433,7 +447,7 @@ function getElement(char: string): string {
 
 // 헬퍼: 십성 관계 계산 (일간 vs 일지)
 function getRelation(stemEl: string, branchEl: string): string {
-  if (stemEl === branchEl) return "비겁(나와 같은 기운)";
+  if (stemEl === branchEl) return "Companion (an energy that matches yours)";
 
   // 목 -> 화 -> 토 -> 금 -> 수 -> 목 (상생)
   const production = { 목: "화", 화: "토", 토: "금", 금: "수", 수: "목" };
@@ -441,15 +455,15 @@ function getRelation(stemEl: string, branchEl: string): string {
   const control = { 목: "토", 토: "수", 수: "화", 화: "금", 금: "목" };
 
   if (production[stemEl as keyof typeof production] === branchEl)
-    return "식상(내가 생하는 기운)";
+    return "Expression (an energy you generate)";
   if (control[stemEl as keyof typeof control] === branchEl)
-    return "재성(내가 극하는 기운)";
+    return "Wealth (an energy you control)";
   if (production[branchEl as keyof typeof production] === stemEl)
-    return "인성(나를 생하는 기운)";
+    return "Resource (an energy that generates you)";
   if (control[branchEl as keyof typeof control] === stemEl)
-    return "관성(나를 극하는 기운)";
+    return "Authority (an energy that controls you)";
 
-  return "알 수 없음";
+  return "Unknown";
 }
 
 // 한자 기둥 -> 한글 변환 헬퍼

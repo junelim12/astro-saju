@@ -1,20 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  /* 전체 화면 배경 통일 (첫/로딩/결과 동일) */
-  --saju-bg: #ffffff;
-  --saju-surface: #ffffff;
-  --saju-input: #f5f5f7;
-  --saju-border: #e5e5ea;
-  --saju-text: #111111;
-  --saju-muted: #6b7280;
+  /* 전체 화면 배경 통일 (첫/로딩/결과 동일) — 다크 테마 */
+  --saju-bg: #000000;
+  --saju-surface: #131316;
+  --saju-input: #1a1a1e;
+  --saju-border: #2e2e34;
+  --saju-text: #ffffff;
+  --saju-muted: #9a9aa5;
 
-  --saju-purple: #6b4c9a;
-  --saju-purple-light: #8b6bb8;
+  --saju-purple: #b026ff;
+  --saju-purple-light: #c869ff;
   --saju-gold: #c9a227;
   --saju-gold-dark: #a8861f;
-  /* 서브타이틀 컬러 */
-  --saju-subtitle: #8F35AD;
+  /* 포인트 컬러: 쩅한 보라 */
+  --saju-subtitle: #b026ff;
+  --saju-accent: #b026ff;
+  --saju-accent-hover: #9a0de0;
 }
 
 @theme inline {
@@ -29,6 +31,8 @@
   --color-saju-gold: var(--saju-gold);
   --color-saju-gold-dark: var(--saju-gold-dark);
   --color-saju-subtitle: var(--saju-subtitle);
+  --color-saju-accent: var(--saju-accent);
+  --color-saju-accent-hover: var(--saju-accent-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

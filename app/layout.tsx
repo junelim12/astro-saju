@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "사주·운명 분석",
-  description: "생년월일과 시간으로 당신의 운명을 읽어드립니다",
+  title: "Destiny Report | Astrology + Saju",
+  description: "We read your destiny from your birth date and time — blending Western Astrology with Saju.",
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

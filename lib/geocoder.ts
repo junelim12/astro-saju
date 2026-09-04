@@ -1,63 +1,111 @@
 // lib/geocoder.ts
 
 type GeoData = {
-    lat: number;
-    lng: number;
-    name: string;
-  };
-  
-  // 주요 도시 좌표 데이터베이스 (필요하면 더 추가하면 됩니다)
-  const CITY_DB: Record<string, GeoData> = {
-    // 한국
-    "서울": { lat: 37.5665, lng: 126.9780, name: "Seoul" },
-    "부산": { lat: 35.1796, lng: 129.0756, name: "Busan" },
-    "인천": { lat: 37.4563, lng: 126.7052, name: "Incheon" },
-    "대구": { lat: 35.8714, lng: 128.6014, name: "Daegu" },
-    "대전": { lat: 36.3504, lng: 127.3845, name: "Daejeon" },
-    "광주": { lat: 35.1595, lng: 126.8526, name: "Gwangju" },
-    "제주": { lat: 33.4996, lng: 126.5312, name: "Jeju" },
-    "강릉": { lat: 37.7519, lng: 128.8760, name: "Gangneung" },
-    
-    // 해외 (영어/한글 병기)
-    "뉴욕": { lat: 40.7128, lng: -74.0060, name: "New York" },
-    "new york": { lat: 40.7128, lng: -74.0060, name: "New York" },
-    "런던": { lat: 51.5074, lng: -0.1278, name: "London" },
-    "london": { lat: 51.5074, lng: -0.1278, name: "London" },
-    "도쿄": { lat: 35.6762, lng: 139.6503, name: "Tokyo" },
-    "tokyo": { lat: 35.6762, lng: 139.6503, name: "Tokyo" },
-    "파리": { lat: 48.8566, lng: 2.3522, name: "Paris" },
-    "paris": { lat: 48.8566, lng: 2.3522, name: "Paris" },
-  };
-  
-  export function getCoordinates(input: string): GeoData {
-    // 1. 입력값 정리 (공백 제거, 소문자 변환 등)
-    const key = input.trim().replace("시", "").replace("특별시", "").replace("광역시", "").toLowerCase();
-    
-    // 2. DB에서 찾기
-    if (CITY_DB[key]) {
-      return CITY_DB[key];
-    }
-  
-    // 3. 없으면? (기본값으로 서울을 주되, 이름은 그대로 반환해서 AI가 알아서 처리하게 함)
-    // 점성술에서는 위도가 중요하므로, 한국이라 가정하고 서울 위도를 default로 씁니다.
-    return { lat: 37.5665, lng: 126.9780, name: input }; 
+  lat: number;
+  lng: number;
+  name: string;
+};
+
+// Major city coordinate database (US-first; add more as needed)
+const CITY_DB: Record<string, GeoData> = {
+  // United States
+  "new york": { lat: 40.7128, lng: -74.006, name: "New York" },
+  "los angeles": { lat: 34.0522, lng: -118.2437, name: "Los Angeles" },
+  chicago: { lat: 41.8781, lng: -87.6298, name: "Chicago" },
+  houston: { lat: 29.7604, lng: -95.3698, name: "Houston" },
+  phoenix: { lat: 33.4484, lng: -112.074, name: "Phoenix" },
+  philadelphia: { lat: 39.9526, lng: -75.1652, name: "Philadelphia" },
+  "san antonio": { lat: 29.4241, lng: -98.4936, name: "San Antonio" },
+  "san diego": { lat: 32.7157, lng: -117.1611, name: "San Diego" },
+  dallas: { lat: 32.7767, lng: -96.797, name: "Dallas" },
+  austin: { lat: 30.2672, lng: -97.7431, name: "Austin" },
+  "san jose": { lat: 37.3382, lng: -121.8863, name: "San Jose" },
+  "san francisco": { lat: 37.7749, lng: -122.4194, name: "San Francisco" },
+  seattle: { lat: 47.6062, lng: -122.3321, name: "Seattle" },
+  denver: { lat: 39.7392, lng: -104.9903, name: "Denver" },
+  boston: { lat: 42.3601, lng: -71.0589, name: "Boston" },
+  "washington dc": { lat: 38.9072, lng: -77.0369, name: "Washington, DC" },
+  nashville: { lat: 36.1627, lng: -86.7816, name: "Nashville" },
+  atlanta: { lat: 33.749, lng: -84.388, name: "Atlanta" },
+  miami: { lat: 25.7617, lng: -80.1918, name: "Miami" },
+  "las vegas": { lat: 36.1699, lng: -115.1398, name: "Las Vegas" },
+  portland: { lat: 45.5152, lng: -122.6784, name: "Portland" },
+  minneapolis: { lat: 44.9778, lng: -93.265, name: "Minneapolis" },
+  detroit: { lat: 42.3314, lng: -83.0458, name: "Detroit" },
+  "new orleans": { lat: 29.9511, lng: -90.0715, name: "New Orleans" },
+  charlotte: { lat: 35.2271, lng: -80.8431, name: "Charlotte" },
+  orlando: { lat: 28.5384, lng: -81.3789, name: "Orlando" },
+  "salt lake city": { lat: 40.7608, lng: -111.891, name: "Salt Lake City" },
+  honolulu: { lat: 21.3069, lng: -157.8583, name: "Honolulu" },
+  anchorage: { lat: 61.2181, lng: -149.9003, name: "Anchorage" },
+  "kansas city": { lat: 39.0997, lng: -94.5786, name: "Kansas City" },
+  "st. louis": { lat: 38.627, lng: -90.1994, name: "St. Louis" },
+  pittsburgh: { lat: 40.4406, lng: -79.9959, name: "Pittsburgh" },
+  baltimore: { lat: 39.2904, lng: -76.6122, name: "Baltimore" },
+  sacramento: { lat: 38.5816, lng: -121.4944, name: "Sacramento" },
+  raleigh: { lat: 35.7796, lng: -78.6382, name: "Raleigh" },
+  columbus: { lat: 39.9612, lng: -82.9988, name: "Columbus" },
+  indianapolis: { lat: 39.7684, lng: -86.1581, name: "Indianapolis" },
+  milwaukee: { lat: 43.0389, lng: -87.9065, name: "Milwaukee" },
+  memphis: { lat: 35.1495, lng: -90.049, name: "Memphis" },
+  "oklahoma city": { lat: 35.4676, lng: -97.5164, name: "Oklahoma City" },
+
+  // Canada
+  toronto: { lat: 43.6532, lng: -79.3832, name: "Toronto" },
+  vancouver: { lat: 49.2827, lng: -123.1207, name: "Vancouver" },
+  montreal: { lat: 45.5019, lng: -73.5674, name: "Montreal" },
+
+  // United Kingdom
+  london: { lat: 51.5074, lng: -0.1278, name: "London" },
+  manchester: { lat: 53.4808, lng: -2.2426, name: "Manchester" },
+  edinburgh: { lat: 55.9533, lng: -3.1883, name: "Edinburgh" },
+
+  // Other major world cities
+  paris: { lat: 48.8566, lng: 2.3522, name: "Paris" },
+  tokyo: { lat: 35.6762, lng: 139.6503, name: "Tokyo" },
+  seoul: { lat: 37.5665, lng: 126.978, name: "Seoul" },
+  sydney: { lat: -33.8688, lng: 151.2093, name: "Sydney" },
+  "mexico city": { lat: 19.4326, lng: -99.1332, name: "Mexico City" },
+  mumbai: { lat: 19.076, lng: 72.8777, name: "Mumbai" },
+  manila: { lat: 14.5995, lng: 120.9842, name: "Manila" },
+};
+
+export function getCoordinates(input: string): GeoData {
+  const key = input.trim().toLowerCase();
+
+  if (CITY_DB[key]) {
+    return CITY_DB[key];
   }
 
-  /** 도시별 UTC 시차(시간). 별자리 차트 계산용 */
-  const CITY_TIMEZONE: Record<string, number> = {
-    "서울": 9, "부산": 9, "인천": 9, "대구": 9, "대전": 9, "광주": 9, "울산": 9,
-    "제주": 9, "세종": 9, "수원": 9, "고양": 9, "용인": 9, "성남": 9, "부천": 9,
-    "청주": 9, "천안": 9, "전주": 9, "포항": 9, "창원": 9, "강릉": 9,
-    "뉴욕": -5, "new york": -5, "로스앤젤레스": -8, "시카고": -6, "샌프란시스코": -8,
-    "시애틀": -8, "워싱턴dc": -5, "보스턴": -5, "하와이": -10,
-    "런던": 0, "london": 0, "도쿄": 9, "tokyo": 9, "오사카": 9, "교토": 9,
-    "후쿠오카": 9, "삿포로": 9, "나고야": 9, "오키나와": 9,
-    "파리": 1, "paris": 1, "베를린": 1, "로마": 1, "마드리드": 1, "암스테르담": 1, "프라하": 1,
-    "베이징": 8, "상하이": 8, "광저우": 8, "홍콩": 8, "마카오": 8,
-    "시드니": 11, "토론토": -5, "밴쿠버": -8, "방콕": 7, "싱가포르": 8, "호치민": 7, "두바이": 4,
-  };
+  // Fallback: default to New York's coordinates (most common timezone reference)
+  // but keep the original name so the AI can still work with it.
+  return { lat: 40.7128, lng: -74.006, name: input };
+}
 
-  export function getTimezoneOffset(cityInput: string): number {
-    const key = cityInput.trim().replace("시", "").replace("특별시", "").replace("광역시", "").toLowerCase();
-    return CITY_TIMEZONE[key] ?? 9;
-  }
+/** City -> UTC offset (hours, standard time). Used for chart calculation. */
+const CITY_TIMEZONE: Record<string, number> = {
+  // United States
+  "new york": -5, "los angeles": -8, chicago: -6, houston: -6, phoenix: -7,
+  philadelphia: -5, "san antonio": -6, "san diego": -8, dallas: -6, austin: -6,
+  "san jose": -8, "san francisco": -8, seattle: -8, denver: -7, boston: -5,
+  "washington dc": -5, nashville: -6, atlanta: -5, miami: -5, "las vegas": -8,
+  portland: -8, minneapolis: -6, detroit: -5, "new orleans": -6, charlotte: -5,
+  orlando: -5, "salt lake city": -7, honolulu: -10, anchorage: -9,
+  "kansas city": -6, "st. louis": -6, pittsburgh: -5, baltimore: -5,
+  sacramento: -8, raleigh: -5, columbus: -5, indianapolis: -5, milwaukee: -6,
+  memphis: -6, "oklahoma city": -6,
+
+  // Canada
+  toronto: -5, vancouver: -8, montreal: -5,
+
+  // United Kingdom
+  london: 0, manchester: 0, edinburgh: 0,
+
+  // Other
+  paris: 1, tokyo: 9, seoul: 9, sydney: 10, "mexico city": -6, mumbai: 5.5, manila: 8,
+};
+
+export function getTimezoneOffset(cityInput: string): number {
+  const key = cityInput.trim().toLowerCase();
+  return CITY_TIMEZONE[key] ?? -5;
+}
