@@ -1,101 +1,101 @@
 /**
- * 별자리별 하드코딩 설명 — Sun / Moon / Rising 카드용
- * 키: 한글 별자리 이름 (예: "처녀자리")
+ * Zodiac sign descriptions — used for the Sun / Moon / Rising cards.
+ * Keys: English sign name (e.g. "Virgo")
  */
 
 export const SUN_SIGN_DESCRIPTIONS: Record<string, string> = {
-  양자리:
-    "무엇이든 주저하지 않고 시작하는 개척자의 심장을 가졌습니다. 남들이 가지 않은 길을 먼저 가고 승리하는 과정에서 본인의 존재 가치를 증명해 냅니다.",
-  황소자리:
-    "삶의 견고한 안정을 구축하고 감각적인 아름다움을 즐기는 데 집중합니다. 서두르지 않고 자신만의 속도로 성실하게 결과를 만들어내는 뚝심이 있습니다.",
-  쌍둥이자리:
-    "세상의 모든 지식과 정보를 수집하고 이를 타인과 나누는 것을 즐깁니다. 변화무쌍한 환경 속에서도 탁월한 적응력을 보이며, 끊임없이 지적 호기심을 충족시킵니다.",
-  게자리:
-    "소중한 사람들을 지키기 위한 따뜻한 울타리를 만드는 것이 삶의 원동력입니다. 뛰어난 공감 능력으로 주변을 돌보며, 정서적 유대감이 깊은 관계에서 큰 힘을 얻습니다.",
-  사자자리:
-    "자신만의 특별한 빛으로 세상의 중심에 서고 싶어 하는 주인공입니다. 타고난 창의성과 자신감으로 주변에 긍정적인 에너지를 전파하며, 인정받을 때 가장 열정적으로 타오릅니다.",
-  처녀자리:
-    "복잡한 세상 속에서 질서를 찾고, 주어진 일을 완벽하게 해내는 데서 보람을 느낍니다. 세심한 분석력과 현실적인 감각으로 주변을 더 낫게 개선하는 실질적인 해결사입니다.",
-  천칭자리:
-    "대립하는 것들 사이에서 조화를 찾고, 모두가 행복할 수 있는 균형을 맞추는 데 능숙합니다. 세련된 미적 감각과 매너를 갖추었으며, 정의롭고 합리적인 관계를 지향합니다.",
-  전갈자리:
-    "피상적인 현상 너머의 진실을 꿰뚫어 보며, 삶의 본질적인 가치에 깊이 몰입합니다. 한 번 결심한 일은 끝까지 파고드는 강인한 집념과 놀라운 회복력을 지닌 전략가입니다.",
-  사수자리:
-    "끊임없이 삶의 철학적 의미를 탐구하며 넓은 세상을 향해 나아가는 자유로운 영혼입니다. 낙천적인 태도로 불가능에 도전하며, 새로운 지식과 모험을 통해 자아를 확장합니다.",
-  염소자리:
-    "높은 산을 한 걸음씩 오르는 등반가처럼, 구체적인 목표를 향해 묵묵히 나아갑니다. 강한 책임감과 자제력을 바탕으로 사회적 성공과 실질적인 성취를 이루어내는 리더입니다.",
-  물병자리:
-    "관습에 얽매이지 않고 미래를 앞서가는 독창적인 시야를 가졌습니다. 인류애와 정의감을 바탕으로 공동체의 발전을 꿈꾸며, 누구와도 대체될 수 없는 자신만의 개성을 추구합니다.",
-  물고기자리:
-    "현실과 이상 사이를 자유롭게 오가며 만물에 대한 무한한 자비와 공감을 실천합니다. 영감이 풍부하고 직관력이 뛰어나며, 예술적 감수성을 통해 세상을 아름답게 치유합니다.",
+  Aries:
+    "You've got the heart of a trailblazer who never hesitates to go first. Taking the road no one else has taken — and winning — is how you prove to yourself that you matter.",
+  Taurus:
+    "You're focused on building real, lasting stability and enjoying life's sensory pleasures along the way. You don't rush; steady, patient effort at your own pace is how you get results that last.",
+  Gemini:
+    "You love collecting knowledge and information from every corner of the world and sharing it with everyone you meet. You adapt effortlessly to changing environments, and your curiosity never runs dry.",
+  Cancer:
+    "Building a warm, protective circle around the people you love is what drives you. Your deep empathy lets you care for everyone around you, and you draw real strength from emotionally close relationships.",
+  Leo:
+    "You're the main character who wants to stand at the center of the world in your own unique light. Your natural creativity and confidence spread positive energy everywhere you go, and you burn brightest when you're recognized.",
+  Virgo:
+    "You find order in a chaotic world and take real satisfaction in doing things right. With sharp analysis and a practical eye, you're the fixer who makes everything around you just a little better.",
+  Libra:
+    "You're skilled at finding harmony between opposing forces and striking a balance where everyone wins. With refined taste and manners, you're drawn to relationships built on fairness and reason.",
+  Scorpio:
+    "You see straight through the surface to what's actually true, and you go all-in on what matters most in life. Once you commit to something, you follow it all the way through — a strategist with fierce willpower and remarkable resilience.",
+  Sagittarius:
+    "You're a free spirit endlessly exploring the deeper meaning of life while chasing a bigger world. Optimistic and unafraid of long odds, you expand who you are through new knowledge and adventure.",
+  Capricorn:
+    "Like a climber working a mountain one step at a time, you move steadily toward concrete goals. Strong discipline and a real sense of responsibility make you the kind of leader who turns ambition into results.",
+  Aquarius:
+    "You see the future before everyone else and refuse to be boxed in by convention. Driven by a sense of humanity and fairness, you dream of a better collective future while staying unmistakably, unapologetically yourself.",
+  Pisces:
+    "You move freely between reality and imagination, extending boundless compassion to everything around you. Intuitive and deeply inspired, your artistic sensitivity has a way of making the world a little more beautiful.",
 };
 
 export const MOON_SIGN_DESCRIPTIONS: Record<string, string> = {
-  양자리:
-    "내 욕구가 솔직하게 표현되고 즉각적으로 수용될 때 마음의 평화를 얻습니다. 남들의 시선을 의식하지 않고 열정적으로 무언가에 몰입할 때 가장 나다운 편안함을 느낍니다.",
-  황소자리:
-    "맛있는 음식, 부드러운 촉감, 경제적 여유처럼 오감이 만족되는 확실한 환경이 필요합니다. 변화가 적고 예측 가능한 루틴 속에서 비로소 정서적 안정을 누립니다.",
-  쌍둥이자리:
-    "머릿속의 생각들을 끊임없이 대화로 풀어내거나 새로운 정보를 접할 때 안도감을 느낍니다. 지루한 것은 견디기 힘들며, 지적인 자극이 지속될 때 감정적으로 활기를 띱니다.",
-  게자리:
-    "감정의 파도를 온전히 이해받고, 나를 조건 없이 사랑해 주는 가족 같은 관계가 필수적입니다. 누군가를 정성껏 돌보거나 보호받는 느낌이 들 때 내면의 평온을 되찾습니다.",
-  사자자리:
-    "나의 존재가 특별하게 대우받고, 사람들에게 아낌없는 칭찬을 받을 때 감정적인 충만함을 느낍니다. 속마음은 때로 어린아이처럼 순수하며, 애정의 중심에 있을 때 가장 행복합니다.",
-  처녀자리:
-    "내 일상이 완벽하게 정리되어 있고 스스로를 통제하고 있다는 느낌이 들 때 안정됩니다. 남에게 도움이 되는 존재라는 확신이 서면 불안함이 사라지고 마음이 차분해집니다.",
-  천칭자리:
-    "주변 사람들과 갈등 없이 평화로운 상태를 유지하는 것이 감정 건강에 가장 중요합니다. 혼자 있는 것보다 마음이 맞는 파트너와 함께 소통할 때 정서적 결핍이 채워집니다.",
-  전갈자리:
-    "가벼운 만남보다는 영혼까지 공유할 수 있는 깊고 진한 유대감을 갈구합니다. 비밀을 공유하거나 강렬한 감정을 나눌 수 있는 신뢰 관계에서 진정한 안식처를 발견합니다.",
-  사수자리:
-    "그 누구에게도 구속받지 않고 언제든 떠날 수 있다는 심리적 자유가 있을 때 편안합니다. 새로운 경험을 통해 시야가 넓어지는 과정 자체가 본인에게는 최고의 감정적 치유입니다.",
-  염소자리:
-    "계획한 대로 일이 진행되고 사회적으로 유능한 사람이라는 인정을 받을 때 안정감을 느낍니다. 가벼운 위로보다는 실질적인 성과와 권위가 본인의 감정을 지켜주는 든든한 방패가 됩니다.",
-  물병자리:
-    "집단에 속해 있으면서도 나만의 독자적인 영역과 시간이 보장되어야 숨통이 트입니다. 감정적으로 얽매이는 것을 경계하며, 지적 공감대가 형성된 관계에서 쿨한 편안함을 느낍니다.",
-  물고기자리:
-    "현실의 소음에서 벗어나 혼자만의 상상이나 예술적 활동에 침잠할 때 에너지가 회복됩니다. 경계 없는 공감 능력 탓에 타인의 감정에 쉽게 휩쓸리기도 하지만, 명상을 통해 내면의 평화를 찾습니다.",
+  Aries:
+    "You feel at peace when your wants are stated plainly and met right away. You're most comfortable being yourself when you can throw yourself into something you care about without worrying what anyone thinks.",
+  Taurus:
+    "You need a dependable environment that satisfies the senses — good food, soft textures, financial breathing room. Real emotional stability only comes from a predictable routine with little sudden change.",
+  Gemini:
+    "You feel reassured when you can talk through what's on your mind or take in something new. Boredom is hard for you to sit with, and you come alive emotionally when you're intellectually stimulated.",
+  Cancer:
+    "You need relationships that feel like family — where your emotional waves are fully understood and you're loved without conditions. Caring for someone, or being cared for, is how you find your inner calm.",
+  Leo:
+    "You feel emotionally full when you're treated as someone special and given generous praise. Underneath it all you can be as pure as a kid, and you're happiest at the center of genuine affection.",
+  Virgo:
+    "You feel settled when your day-to-day is perfectly in order and you feel in control of your own life. Once you're sure you're useful to someone, the anxiety fades and your mind goes quiet.",
+  Libra:
+    "Staying in peaceful, conflict-free relationships matters most for your emotional health. Rather than being alone, you fill what's missing emotionally by talking things through with a partner who's on your wavelength.",
+  Scorpio:
+    "You crave deep, soul-level bonds over anything casual. You find real refuge in relationships built on trust, where secrets and intense feelings can be shared safely.",
+  Sagittarius:
+    "You feel comfortable knowing you're free to leave anytime, tied down by no one. Widening your perspective through new experiences is, for you, the best kind of emotional healing there is.",
+  Capricorn:
+    "You feel secure when things go according to plan and you're recognized as genuinely competent. Real results and authority protect your feelings better than any comforting words could.",
+  Aquarius:
+    "You need room to breathe — your own territory and time, even while belonging to a group. Wary of getting emotionally entangled, you feel a cool sense of ease in relationships built on intellectual connection.",
+  Pisces:
+    "You recharge by stepping away from the noise of reality into solitude, imagination, or art. Your boundless empathy means you can get swept up in other people's emotions, but meditation helps you find your inner peace again.",
 };
 
 export const RISING_SIGN_DESCRIPTIONS: Record<string, string> = {
-  양자리:
-    "생동감 넘치는 눈빛과 빠른 행동력이 특징이며, 어디서든 활기찬 첫인상을 줍니다. 솔직하고 당당한 태도 덕분에 초면에 \"시원시원하고 열정적이다\"라는 평가를 자주 받습니다.",
-  황소자리:
-    "차분하고 느긋한 분위기를 풍기며, 말과 행동에서 은근한 고급스러움과 무게감이 느껴집니다. 사람들은 당신에게서 안정감과 신뢰를 느끼며, 쉽게 변하지 않을 것 같은 단단한 인상을 받습니다.",
-  쌍둥이자리:
-    "영리하고 호기심 어린 표정이 매력적이며, 누구와도 금방 대화를 시작할 수 있는 유연한 아우라가 있습니다. 세련된 유머 감각과 빠른 눈치 덕분에 \"재치 있고 다재다능하다\"는 소리를 듣습니다.",
-  게자리:
-    "부드러운 곡선의 인상과 선한 눈매를 가져, 처음 보는 사람도 편안하게 무장해제 시키는 힘이 있습니다. 친근하고 다정한 느낌 덕분에 사람들은 당신을 \"포근하고 배려심 깊은 사람\"으로 기억합니다.",
-  사자자리:
-    "굳이 애쓰지 않아도 당당한 품위와 화려한 존재감이 드러나 군중 속에서도 눈에 띕니다. 자신감 넘치는 태도와 쾌활한 웃음소리가 주변 분위기를 압도하는 매력적인 카리스마가 있습니다.",
-  처녀자리:
-    "단정한 옷차림과 흐트러짐 없는 자세로 지적이고 신중한 느낌을 줍니다. 예의 바르고 분석적인 태도 덕분에 사람들은 당신을 \"꼼꼼하고 자기관리가 철저한 전문가\"로 인식합니다.",
-  천칭자리:
-    "조화롭고 균형 잡힌 외모와 매너 있는 태도로 누구에게나 호감을 주는 세련된 이미지를 가집니다. 부드러운 화술과 사교성 덕분에 \"세련되고 원만한 사람\"이라는 인상을 심어줍니다.",
-  전갈자리:
-    "쉽게 속을 내비치지 않는 신비롭고 강렬한 분위기가 있어 사람들의 호기심을 자극합니다. 깊은 통찰력이 느껴지는 눈빛은 다가가기 힘든 카리스마와 동시에 묘한 매력을 풍깁니다.",
-  사수자리:
-    "구김살 없는 밝은 표정과 시원한 웃음에서 낙천적이고 모험가적인 기질이 느껴집니다. 구속받기 싫어하는 자유분방한 에너지가 뿜어져 나와 주변 사람들에게도 즐거움을 선사합니다.",
-  염소자리:
-    "실제 나이보다 성숙하고 차분해 보이며, 엄격하면서도 신뢰가 가는 권위 있는 이미지를 줍니다. 책임감 있는 말투와 신중한 행동 덕분에 \"어른스럽고 믿음직한 사람\"이라는 인상을 남깁니다.",
-  물병자리:
-    "유행을 따르기보다 자신만의 독특한 스타일을 고수하며, 쿨하고 이성적인 분위기를 풍깁니다. 고정관념에서 벗어난 개성 있는 태도 덕분에 \"독창적이고 생각이 깊은 사람\"으로 비춰집니다.",
-  물고기자리:
-    "몽환적이고 부드러운 눈빛을 가졌으며, 어딘가 예술가적이거나 신비로운 분위기를 자아냅니다. 타인의 마음을 무장해제 시키는 묘한 수용력이 느껴져 \"감수성이 풍부하고 꿈꾸는 듯한 사람\"으로 보입니다.",
+  Aries:
+    "Bright eyes and quick movement give you an energetic first impression wherever you go. Your straightforward, confident manner earns you a reputation as someone \"upfront and full of passion\" the moment people meet you.",
+  Taurus:
+    "You give off a calm, unhurried air, and there's a quiet weight and polish to everything you say and do. People sense stability and trustworthiness around you and read you as solid, unlikely to change on a whim.",
+  Gemini:
+    "A sharp, curious expression is part of your charm, along with an easy energy that lets you strike up conversation with anyone instantly. Your quick wit and sharp instincts earn you a reputation as \"clever and versatile.\"",
+  Cancer:
+    "Soft features and kind eyes have a way of putting even total strangers at ease. Your warm, caring vibe means people remember you as someone \"comforting and genuinely thoughtful.\"",
+  Leo:
+    "Without even trying, you carry a dignified presence and bold energy that stands out in any crowd. Your confident manner and bright laugh give you a magnetic charisma that takes over the room.",
+  Virgo:
+    "A put-together look and composed posture give off an intelligent, careful impression. Your polite, analytical demeanor earns you a reputation as \"a meticulous, disciplined professional.\"",
+  Libra:
+    "Balanced style and gracious manners give you a polished image that people naturally warm to. Your smooth way with words and social ease leave people thinking \"refined and easy to get along with.\"",
+  Scorpio:
+    "You give off a mysterious, intense aura that doesn't give much away, which only makes people more curious. Your penetrating gaze reads as hard-to-approach but undeniably magnetic at the same time.",
+  Sagittarius:
+    "An easygoing expression and big, easy laugh signal an optimistic, adventurous streak. Your free-spirited energy — allergic to being boxed in — tends to bring everyone around you along for the fun.",
+  Capricorn:
+    "You come across as more mature and composed than your actual age, with a strict but trustworthy, authoritative presence. Responsible speech and careful action leave people thinking \"grown-up and dependable.\"",
+  Aquarius:
+    "Rather than following trends, you stick to your own distinct style, giving off a cool, rational vibe. Your unconventional attitude earns you a reputation as \"original and a deep thinker.\"",
+  Pisces:
+    "You have a dreamy, gentle gaze with a faintly artistic or mysterious air about you. A strange, disarming warmth makes people describe you as \"sensitive and dreamlike.\"",
 };
 
-/** tropical 순서: 양자리(0) ~ 물고기자리(11) — 달/상승궁 인덱스 매핑용 */
+/** Tropical order: Aries(0) – Pisces(11) — used for Moon/Rising sign index mapping */
 export const ZODIAC_SIGNS_BY_INDEX: readonly string[] = [
-  "양자리",
-  "황소자리",
-  "쌍둥이자리",
-  "게자리",
-  "사자자리",
-  "처녀자리",
-  "천칭자리",
-  "전갈자리",
-  "사수자리",
-  "염소자리",
-  "물병자리",
-  "물고기자리",
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces",
 ] as const;
